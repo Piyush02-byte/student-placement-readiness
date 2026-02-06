@@ -13,12 +13,29 @@ st.set_page_config(
 )
 
 # ---------------- LOAD MODEL & PREPROCESSORS ----------------
+import os
+from train_model import train_and_save_model
+
 @st.cache_resource
 def load_artifacts():
-    model = joblib.load("model/readiness_model.pkl")
-    encoder = joblib.load("model/encoder.pkl")
-    scaler = joblib.load("model/scaler.pkl")
+    os.makedirs("model", exist_ok=True)
+
+    model_path = "model/readiness_model.pkl"
+    encoder_path = "model/encoder.pkl"
+    scaler_path = "model/scaler.pkl"
+
+    # If model files do not exist, train them
+    if not (os.path.exists(model_path) and 
+            os.path.exists(encoder_path) and 
+            os.path.exists(scaler_path)):
+        train_and_save_model()
+
+    model = joblib.load(model_path)
+    encoder = joblib.load(encoder_path)
+    scaler = joblib.load(scaler_path)
+
     return model, encoder, scaler
+
 
 
 model, encoder, scaler = load_artifacts()
