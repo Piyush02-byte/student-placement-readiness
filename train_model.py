@@ -27,21 +27,34 @@ def train_and_save_model():
 
     X = np.hstack([X_num_scaled, X_cat_enc])
 
-    y = df["Readiness_Score"]
+    # ---------------- CREATE TARGET (READINESS SCORE) ----------------
+df["Readiness_Score"] = (
+    df["CGPA"] * 10 +
+    df["Coding_Skills"] * 6 +
+    df["Communication_Skills"] * 4 +
+    df["Projects"] * 5 +
+    df["Internships"] * 8
+)
+
+# cap score at 100
+df["Readiness_Score"] = df["Readiness_Score"].clip(0, 100)
+
+y = df["Readiness_Score"]
+
 
     # ---------------- MODEL ----------------
-    model = RandomForestRegressor(
+model = RandomForestRegressor(
         n_estimators=200,
         random_state=42
     )
-    model.fit(X, y)
+model.fit(X, y)
 
     # ---------------- SAVE ARTIFACTS ----------------
-    os.makedirs("model", exist_ok=True)
+os.makedirs("model", exist_ok=True)
 
-    joblib.dump(model, "model/readiness_model.pkl")
-    joblib.dump(encoder, "model/encoder.pkl")
-    joblib.dump(scaler, "model/scaler.pkl")
+joblib.dump(model, "model/readiness_model.pkl")
+joblib.dump(encoder, "model/encoder.pkl")
+joblib.dump(scaler, "model/scaler.pkl")
 
 if __name__ == "__main__":
     train_and_save_model()
