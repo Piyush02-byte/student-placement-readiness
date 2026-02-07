@@ -101,8 +101,15 @@ if st.session_state.evaluated:
 
     predicted_class = model.predict(X_input)[0]
 
-    score_map = {0: 35, 1: 60, 2: 85}
-    predicted_score = score_map[predicted_class]
+    score_map = {
+    0: 35,   # Low
+    1: 60,   # Medium
+    2: 85    # High
+}
+
+    predicted_score = score_map.get(predicted_class, 50)
+
+    predicted_class = int(model.predict(X_input)[0])
 
     level = readiness_level(predicted_score)
 
