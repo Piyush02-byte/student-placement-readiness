@@ -1,6 +1,5 @@
 """
-Student Placement Readiness Dashboard
-Streamlit application for assessing student placement readiness
+Fixed Streamlit app with all visualizations working
 """
 
 import streamlit as st
@@ -10,22 +9,15 @@ import joblib
 import os
 from pathlib import Path
 import plotly.graph_objects as go
-from typing import Tuple, Dict
+import plotly.express as px
+from typing import Tuple
 
 from scoring import readiness_level
 from train_model import train_and_save_model
+from preprocessing import StudentDataPreprocessor
 
-# ---------------- CONSTANTS ----------------
+# ============ CONFIGURATION ============
 MODEL_DIR = "model"
-MODEL_PATH = os.path.join(MODEL_DIR, "readiness_model.pkl")
-ENCODER_PATH = os.path.join(MODEL_DIR, "encoder.pkl")
-SCALER_PATH = os.path.join(MODEL_DIR, "scaler.pkl")
-
-# ---------------- SESSION STATE ----------------
-if "evaluated" not in st.session_state:
-    st.session_state.evaluated = False
-
-# ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="Student Placement Readiness",
     page_icon="🎓",
@@ -33,242 +25,69 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ---------------- CUSTOM CSS ----------------
-st.markdown("""
-    <style>
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
-    }
-    .metric-container {
-        background-color: #f0f2f6;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 0.5rem 0;
-    }
-    .recommendation-box {
-        background-color: #fff3cd;
-        border-left: 4px solid #ffc107;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 0.25rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# ============ SESSION STATE ============
+if "evaluated" not in st.session_state:
+    st.session_state.evaluated = False
 
-
-# ---------------- LOAD ARTIFACTS ----------------
+# ============ LOAD MODEL ============
 @st.cache_resource
 def load_artifacts() -> Tuple:
-    """Load model, encoder, and scaler with error handling"""
+    """Load model and preprocessor"""
     try:
-        # Ensure model directory exists
         Path(MODEL_DIR).mkdir(parents=True, exist_ok=True)
         
-        # Train model if artifacts don't exist
-        if not all([
-            os.path.exists(MODEL_PATH),
-            os.path.exists(ENCODER_PATH),
-            os.path.exists(SCALER_PATH)
-        ]):
-            st.info("🔄 Training model for the first time... This may take a moment.")
-            train_and_save_model()
-            st.success("✅ Model training complete!")
+        model_path = Path(MODEL_DIR) / "readiness_model.pkl"
         
-        # Load artifacts
-        model = joblib.load(MODEL_PATH)
-        encoder = joblib.load(ENCODER_PATH)
-        scaler = joblib.load(SCALER_PATH)
+        if not model_path.exists():
+            with st.spinner("🔄 Training model... This may take a moment."):
+                train_and_save_model()
         
-        return model, encoder, scaler
+        model = joblib.load(model_path)
+        preprocessor = StudentDataPreprocessor.load(MODEL_DIR)
+        
+        return model, preprocessor
     
     except Exception as e:
         st.error(f"❌ Error loading model: {str(e)}")
         st.stop()
 
 
-def get_recommendations(cgpa: float, coding: int, communication: int, 
-                       projects: int, internships: int) -> list:
-    """Generate personalized recommendations based on student profile"""
-    recommendations = []
-    
-    if cgpa < 6.5:
-        recommendations.append({
-            "icon": "📘",
-            "text": "**CGPA Alert**: Focus on improving academic performance. Aim for 7.0+ CGPA.",
-            "priority": "high"
-        })
-    elif cgpa < 7.5:
-        recommendations.append({
-            "icon": "📚",
-            "text": "**Academic Growth**: Good progress! Target 8.0+ for competitive edge.",
-            "priority": "medium"
-        })
-    
-    if coding < 5:
-        recommendations.append({
-            "icon": "💻",
-            "text": "**Coding Skills**: Practice DSA daily on LeetCode/CodeChef. Start with easy problems.",
-            "priority": "high"
-        })
-    elif coding < 7:
-        recommendations.append({
-            "icon": "⌨️",
-            "text": "**Coding Practice**: Solve 2-3 medium problems daily. Focus on patterns.",
-            "priority": "medium"
-        })
-    
-    if communication < 6:
-        recommendations.append({
-            "icon": "🗣️",
-            "text": "**Communication**: Join debate clubs, practice mock interviews, read aloud daily.",
-            "priority": "high"
-        })
-    
-    if projects < 2:
-        recommendations.append({
-            "icon": "🛠️",
-            "text": "**Projects**: Build at least 2-3 full-stack projects. Deploy on GitHub.",
-            "priority": "high"
-        })
-    elif projects < 4:
-        recommendations.append({
-            "icon": "🚀",
-            "text": "**Project Portfolio**: Add 1-2 more projects with modern tech stack.",
-            "priority": "medium"
-        })
-    
-    if internships == 0:
-        recommendations.append({
-            "icon": "🏢",
-            "text": "**Internship**: Apply immediately! Target startups and product companies.",
-            "priority": "high"
-        })
-    elif internships == 1:
-        recommendations.append({
-            "icon": "💼",
-            "text": "**Experience**: Consider a second internship in a different domain.",
-            "priority": "low"
-        })
-    
-    if not recommendations:
-        recommendations.append({
-            "icon": "🌟",
-            "text": "**Excellent Profile**: Maintain consistency and prepare for advanced interviews.",
-            "priority": "low"
-        })
-    
-    return recommendations
+model, preprocessor = load_artifacts()
 
-
-def create_radar_chart(cgpa: float, coding: int, communication: int, 
-                      projects: int, internships: int) -> go.Figure:
-    """Create interactive radar chart for skill visualization"""
-    
-    # Normalize all values to 0-10 scale
-    radar_data = {
-        "CGPA": cgpa,
-        "Coding": coding,
-        "Communication": communication,
-        "Projects": min(projects, 5) * 2,  # Cap at 5, scale to 10
-        "Internships": min(internships, 5) * 2  # Cap at 5, scale to 10
-    }
-    
-    fig = go.Figure()
-    
-    fig.add_trace(go.Scatterpolar(
-        r=list(radar_data.values()),
-        theta=list(radar_data.keys()),
-        fill='toself',
-        name='Your Profile',
-        line_color='#1f77b4',
-        fillcolor='rgba(31, 119, 180, 0.3)'
-    ))
-    
-    # Add benchmark line (target values)
-    benchmark = [8, 8, 7, 8, 6]  # Target values for each skill
-    fig.add_trace(go.Scatterpolar(
-        r=benchmark,
-        theta=list(radar_data.keys()),
-        fill='toself',
-        name='Target Profile',
-        line_color='#2ca02c',
-        fillcolor='rgba(44, 160, 44, 0.1)',
-        line_dash='dash'
-    ))
-    
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 10],
-                tickfont=dict(size=10)
-            )
-        ),
-        showlegend=True,
-        height=450,
-        margin=dict(l=80, r=80, t=40, b=40)
-    )
-    
-    return fig
-
-
-# ---------------- MAIN APP ----------------
-try:
-    model, encoder, scaler = load_artifacts()
-except Exception as e:
-    st.error("Failed to load model. Please check the logs.")
-    st.stop()
-
-# ---------------- HEADER ----------------
-st.markdown('<h1 class="main-header">🎓 Student Placement Readiness Dashboard</h1>', 
-            unsafe_allow_html=True)
-st.caption("ML-powered assessment of placement readiness with actionable insights")
-
+# ============ HEADER ============
+st.title("🎓 Student Placement Readiness Dashboard")
+st.caption("ML-powered assessment with comprehensive analytics")
 st.divider()
 
-# ---------------- SIDEBAR ----------------
+# ============ SIDEBAR ============
 with st.sidebar:
     st.header("🧾 Student Profile")
-    st.caption("Fill in your details below")
     
-    st.subheader("📋 Basic Information")
-    gender = st.selectbox("Gender", ["Male", "Female"], help="Select your gender")
-    degree = st.selectbox("Degree", ["B.Tech", "M.Tech", "B.Sc", "M.Sc"], 
-                         help="Your current degree program")
-    branch = st.selectbox("Branch", ["CSE", "ECE", "ME", "CE", "EE"], 
-                         help="Your branch of study")
+    st.subheader("📋 Basic Info")
+    gender = st.selectbox("Gender", ["Male", "Female"])
+    degree = st.selectbox("Degree", ["B.Tech", "M.Tech", "B.Sc", "M.Sc"])
+    branch = st.selectbox("Branch", ["CSE", "ECE", "ME", "CE", "EE"])
     
-    st.subheader("📊 Academic Performance")
-    cgpa = st.slider("CGPA", 0.0, 10.0, 7.0, 0.1, 
-                    help="Your current CGPA on a 10-point scale")
+    st.subheader("📊 Academics")
+    cgpa = st.slider("CGPA", 0.0, 10.0, 7.0, 0.1)
     
-    st.subheader("💡 Skills Assessment")
-    coding = st.slider("Coding Skills", 1, 10, 6, 1,
-                      help="Rate your coding ability (1=Beginner, 10=Expert)")
-    communication = st.slider("Communication Skills", 1, 10, 6, 1,
-                             help="Rate your communication ability")
+    st.subheader("💡 Skills")
+    coding = st.slider("Coding Skills", 1, 10, 6)
+    communication = st.slider("Communication Skills", 1, 10, 6)
     
     st.subheader("🏆 Experience")
-    projects = st.number_input("Number of Projects", 0, 10, 2, 1,
-                               help="Total completed projects")
-    internships = st.number_input("Number of Internships", 0, 5, 1, 1,
-                                  help="Total internships completed")
+    projects = st.number_input("Projects", 0, 10, 2)
+    internships = st.number_input("Internships", 0, 5, 1)
     
     st.divider()
     
-    evaluate_btn = st.button("🚀 Evaluate Readiness", 
-                            type="primary",
-                            use_container_width=True)
-    
-    if evaluate_btn:
+    if st.button("🚀 Evaluate Readiness", type="primary", use_container_width=True):
         st.session_state.evaluated = True
 
-# ---------------- MAIN OUTPUT ----------------
+# ============ MAIN CONTENT ============
 if st.session_state.evaluated:
     
-    # ---------- PREPARE INPUT ----------
+    # Prepare input
     input_df = pd.DataFrame([{
         "Gender": gender,
         "Degree": degree,
@@ -280,136 +99,171 @@ if st.session_state.evaluated:
         "Communication_Skills": communication
     }])
     
-    cat_cols = ["Gender", "Degree", "Branch"]
-    num_cols = ["CGPA", "Internships", "Projects", "Coding_Skills", "Communication_Skills"]
-    
-    # Encode and scale
-    X_cat = encoder.transform(input_df[cat_cols])
-    X_num = scaler.transform(input_df[num_cols])
-    X = np.hstack([X_num, X_cat])
-    
-    # Predict
-    predicted_score = float(model.predict(X)[0])
+    # Transform and predict
+    X_transformed = preprocessor.transform(input_df)
+    predicted_score = float(np.clip(model.predict(X_transformed)[0], 0, 100))
     level = readiness_level(predicted_score)
     
-    # ================= OVERVIEW CONTAINER =================
-    with st.container():
-        st.subheader("📊 Readiness Overview")
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("Readiness Score", f"{predicted_score:.1f}", 
-                     delta=f"{predicted_score - 70:.1f} from avg",
-                     help="Score out of 100")
-        
-        with col2:
-            st.metric("Readiness Level", level)
-        
-        with col3:
-            percentile = min(int((predicted_score / 100) * 100), 99)
-            st.metric("Percentile", f"{percentile}th",
-                     help="Approximate ranking")
-        
-        with col4:
-            if level == "Low":
-                st.error("⚠️ Needs Work")
-            elif level == "Medium":
-                st.warning("⚡ Good Progress")
-            else:
-                st.success("✅ Excellent!")
+    # ========== OVERVIEW ==========
+    st.subheader("📊 Readiness Overview")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    col1.metric("Readiness Score", f"{predicted_score:.1f}/100")
+    col2.metric("Level", level)
+    col3.metric("Percentile", f"~{int((predicted_score/100)*100)}th")
+    
+    with col4:
+        if level == "Low":
+            st.error("⚠️ Needs Work")
+        elif level == "Medium":
+            st.warning("⚡ Good Progress")
+        else:
+            st.success("✅ Excellent!")
     
     st.divider()
     
-    # ================= VISUALIZATION CONTAINER =================
-    col_left, col_right = st.columns([1, 1])
+    # ========== VISUALIZATIONS ==========
+    col_left, col_right = st.columns(2)
     
+    # RADAR CHART
     with col_left:
-        st.subheader("📈 Skill Radar Chart")
-        fig = create_radar_chart(cgpa, coding, communication, projects, internships)
-        st.plotly_chart(fig, use_container_width=True)
+        st.subheader("📈 Skills Radar")
+        
+        radar_data = {
+            "CGPA": cgpa,
+            "Coding": coding,
+            "Communication": communication,
+            "Projects": min(projects, 5) * 2,
+            "Internships": min(internships, 5) * 2
+        }
+        
+        fig_radar = go.Figure()
+        
+        # Actual profile
+        fig_radar.add_trace(go.Scatterpolar(
+            r=list(radar_data.values()),
+            theta=list(radar_data.keys()),
+            fill='toself',
+            name='Your Profile',
+            line_color='#1f77b4'
+        ))
+        
+        # Target profile
+        fig_radar.add_trace(go.Scatterpolar(
+            r=[8, 8, 7, 8, 6],
+            theta=list(radar_data.keys()),
+            fill='toself',
+            name='Target',
+            line_color='#2ca02c',
+            line_dash='dash'
+        ))
+        
+        fig_radar.update_layout(
+            polar=dict(radialaxis=dict(range=[0, 10])),
+            height=400,
+            showlegend=True
+        )
+        
+        st.plotly_chart(fig_radar, use_container_width=True, key="radar_chart")
     
+    # SCORE BREAKDOWN BAR CHART
     with col_right:
         st.subheader("📉 Score Breakdown")
         
-        breakdown = {
-            "CGPA Contribution": cgpa * 10,
-            "Coding Skills": coding * 6,
-            "Communication": communication * 4,
-            "Projects": projects * 5,
-            "Internships": internships * 8
+        # Calculate actual contributions (normalized)
+        MAX_SCORE = 290  # From training
+        contributions = {
+            "CGPA": (cgpa * 10 / MAX_SCORE) * 100,
+            "Coding": (coding * 6 / MAX_SCORE) * 100,
+            "Communication": (communication * 4 / MAX_SCORE) * 100,
+            "Projects": (min(projects, 10) * 5 / MAX_SCORE) * 100,
+            "Internships": (min(internships, 5) * 8 / MAX_SCORE) * 100
         }
         
-        breakdown_df = pd.DataFrame({
-            "Component": list(breakdown.keys()),
-            "Score": list(breakdown.values())
-        })
-        
         fig_bar = go.Figure(go.Bar(
-            x=breakdown_df["Score"],
-            y=breakdown_df["Component"],
+            x=list(contributions.values()),
+            y=list(contributions.keys()),
             orientation='h',
             marker_color='#1f77b4',
-            text=breakdown_df["Score"].round(1),
+            text=[f"{v:.1f}" for v in contributions.values()],
             textposition='auto'
         ))
         
         fig_bar.update_layout(
             height=400,
-            margin=dict(l=20, r=20, t=20, b=20),
-            xaxis_title="Contribution to Score",
-            yaxis_title=""
+            xaxis_title="Contribution to Score (%)",
+            yaxis_title="",
+            showlegend=False
         )
         
-        st.plotly_chart(fig_bar, use_container_width=True)
+        st.plotly_chart(fig_bar, use_container_width=True, key="bar_chart")
     
     st.divider()
     
-    # ================= RECOMMENDATIONS CONTAINER =================
-    with st.container():
-        st.subheader("💡 Personalized Recommendations")
-        
-        recommendations = get_recommendations(cgpa, coding, communication, projects, internships)
-        
-        for rec in recommendations:
-            priority_color = {
-                "high": "#dc3545",
-                "medium": "#ffc107",
-                "low": "#28a745"
-            }.get(rec["priority"], "#6c757d")
-            
-            st.markdown(f"""
-                <div style="
-                    background-color: #f8f9fa;
-                    border-left: 4px solid {priority_color};
-                    padding: 1rem;
-                    margin: 0.5rem 0;
-                    border-radius: 0.25rem;
-                ">
-                    {rec['icon']} {rec['text']}
-                </div>
-            """, unsafe_allow_html=True)
+    # ========== GAUGE CHART ==========
+    st.subheader("🎯 Readiness Gauge")
+    
+    fig_gauge = go.Figure(go.Indicator(
+        mode="gauge+number+delta",
+        value=predicted_score,
+        domain={'x': [0, 1], 'y': [0, 1]},
+        title={'text': "Placement Readiness", 'font': {'size': 24}},
+        delta={'reference': 70, 'increasing': {'color': "green"}},
+        gauge={
+            'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+            'bar': {'color': "darkblue"},
+            'bgcolor': "white",
+            'borderwidth': 2,
+            'bordercolor': "gray",
+            'steps': [
+                {'range': [0, 60], 'color': '#ffcccc'},
+                {'range': [60, 80], 'color': '#ffffcc'},
+                {'range': [80, 100], 'color': '#ccffcc'}
+            ],
+            'threshold': {
+                'line': {'color': "red", 'width': 4},
+                'thickness': 0.75,
+                'value': 90
+            }
+        }
+    ))
+    
+    fig_gauge.update_layout(height=300)
+    st.plotly_chart(fig_gauge, use_container_width=True, key="gauge_chart")
+    
+    st.divider()
+    
+    # ========== RECOMMENDATIONS ==========
+    st.subheader("💡 Personalized Recommendations")
+    
+    recs = []
+    if cgpa < 7:
+        recs.append("📘 **CGPA**: Focus on improving to 7.0+")
+    if coding < 7:
+        recs.append("💻 **Coding**: Practice DSA daily on LeetCode")
+    if communication < 7:
+        recs.append("🗣️ **Communication**: Join speaking clubs, practice presentations")
+    if projects < 3:
+        recs.append("🛠️ **Projects**: Build 2-3 full-stack projects")
+    if internships < 1:
+        recs.append("🏢 **Internships**: Apply to companies immediately")
+    
+    if not recs:
+        st.success("🌟 **Excellent profile!** Keep preparing for advanced interviews.")
+    else:
+        for rec in recs:
+            st.warning(rec)
     
     # Reset button
-    if st.button("🔄 Evaluate Another Profile"):
+    if st.button("🔄 New Evaluation"):
         st.session_state.evaluated = False
         st.rerun()
 
 else:
-    # Welcome message
-    st.info("👈 **Get Started:** Fill in the student profile form in the sidebar and click '**Evaluate Readiness**' to see results!")
+    st.info("👈 Fill the form and click **Evaluate Readiness**")
     
-    # Feature highlights
     col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown("### 🎯 ML-Powered")
-        st.write("Random Forest model trained on student data")
-    
-    with col2:
-        st.markdown("### 📊 Visual Insights")
-        st.write("Interactive charts and skill breakdowns")
-    
-    with col3:
-        st.markdown("### 💡 Actionable Tips")
-        st.write("Personalized recommendations for improvement")
+    col1.markdown("### 🎯 ML-Powered\nRandom Forest model")
+    col2.markdown("### 📊 Visual Insights\nComprehensive charts")
+    col3.markdown("### 💡 Smart Tips\nPersonalized guidance")
