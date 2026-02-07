@@ -1,6 +1,6 @@
 """
-Student Placement Readiness - Premium Career Guidance Edition
-Focus: Aspirational presentation, visual storytelling, premium layout
+Student Placement Readiness - Complete Premium Edition
+Focus: Centered layout, branded sidebar, all charts visible, stable presentation
 """
 
 import streamlit as st
@@ -19,7 +19,7 @@ from preprocessing import StudentDataPreprocessor
 # ============ CONFIGURATION ============
 MODEL_DIR = "model"
 st.set_page_config(
-    page_title="Your Placement Journey",
+    page_title="PlacePrep Pro",
     page_icon="✨",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -29,34 +29,68 @@ st.set_page_config(
 st.markdown("""
     <style>
     /* Import Premium Font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
     
     /* Global Styles */
     * {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     
-    /* Aspirational Headline */
+    /* Hero Section - Centered */
+    .hero-section {
+        text-align: center;
+        margin: 0 auto 4rem auto;
+        max-width: 900px;
+    }
+    
+    /* Aspirational Headline - Centered */
     .hero-headline {
-        font-size: 3.5rem;
-        font-weight: 800;
+        font-size: 3.8rem;
+        font-weight: 900;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        line-height: 1.2;
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.02em;
+        line-height: 1.15;
+        margin: 0 auto 1rem auto;
+        letter-spacing: -0.03em;
     }
     
-    /* Soft Explanatory Subtitle */
+    /* Soft Explanatory Subtitle - Centered */
     .hero-subtitle {
-        font-size: 1.15rem;
+        font-size: 1.2rem;
         color: #6b7280;
         font-weight: 400;
-        line-height: 1.6;
-        margin-bottom: 3rem;
-        max-width: 700px;
+        line-height: 1.7;
+        margin: 0 auto;
+        max-width: 750px;
+        text-align: center;
+    }
+    
+    /* Sidebar Brand Header */
+    .sidebar-brand {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 1rem;
+        margin: -1rem -1rem 2rem -1rem;
+        text-align: center;
+        border-radius: 0;
+    }
+    
+    .sidebar-brand-name {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -0.01em;
+    }
+    
+    .sidebar-brand-tagline {
+        font-size: 0.8rem;
+        opacity: 0.9;
+        margin: 0.25rem 0 0 0;
+        font-weight: 400;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
     }
     
     /* Premium Cards */
@@ -84,6 +118,7 @@ st.markdown("""
         margin-bottom: 2.5rem;
         position: relative;
         overflow: hidden;
+        text-align: center;
     }
     
     .score-hero::before {
@@ -91,40 +126,46 @@ st.markdown("""
         position: absolute;
         top: -50%;
         right: -10%;
-        width: 300px;
-        height: 300px;
-        background: rgba(255,255,255,0.1);
+        width: 400px;
+        height: 400px;
+        background: rgba(255,255,255,0.08);
         border-radius: 50%;
     }
     
     .score-number {
-        font-size: 5rem;
-        font-weight: 800;
+        font-size: 5.5rem;
+        font-weight: 900;
         line-height: 1;
         margin-bottom: 0.5rem;
+        position: relative;
     }
     
     .score-label {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
         opacity: 0.95;
         font-weight: 600;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
+        position: relative;
     }
     
     .score-context {
-        font-size: 1rem;
-        opacity: 0.9;
-        margin-top: 1.5rem;
-        line-height: 1.6;
+        font-size: 1.05rem;
+        opacity: 0.92;
+        margin-top: 1.8rem;
+        line-height: 1.7;
+        position: relative;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
     }
     
     /* Section Headers */
     .section-header {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
         font-weight: 700;
         color: #1f2937;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.5rem;
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -133,31 +174,36 @@ st.markdown("""
     .section-subheader {
         font-size: 0.95rem;
         color: #6b7280;
-        margin-top: -1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
         font-weight: 400;
     }
     
     /* Metric Cards */
     .metric-card {
-        background: #f9fafb;
-        border-radius: 12px;
-        padding: 1.5rem;
+        background: linear-gradient(135deg, #f9fafb 0%, white 100%);
+        border-radius: 16px;
+        padding: 2rem 1.5rem;
         text-align: center;
         border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+    }
+    
+    .metric-card:hover {
+        border-color: #d1d5db;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     
     .metric-value {
-        font-size: 2rem;
-        font-weight: 700;
+        font-size: 2.25rem;
+        font-weight: 800;
         color: #1f2937;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.5rem;
     }
     
     .metric-label {
         font-size: 0.875rem;
         color: #6b7280;
-        font-weight: 500;
+        font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
@@ -165,11 +211,11 @@ st.markdown("""
     /* Impact Badges */
     .impact-badge {
         display: inline-block;
-        padding: 0.25rem 0.75rem;
+        padding: 0.3rem 0.85rem;
         border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.03em;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
     }
     
@@ -188,43 +234,68 @@ st.markdown("""
         color: white;
     }
     
+    /* Chart Container */
+    .chart-container {
+        background: white;
+        border-radius: 16px;
+        padding: 1.75rem;
+        border: 1px solid #e5e7eb;
+        height: 100%;
+    }
+    
+    .chart-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .chart-caption {
+        font-size: 0.85rem;
+        color: #9ca3af;
+        margin-bottom: 1.25rem;
+    }
+    
     /* Recommendation Cards */
     .rec-critical {
         background: linear-gradient(to right, #fef2f2 0%, white 100%);
-        border-left: 4px solid #ef4444;
-        padding: 1.5rem;
+        border-left: 5px solid #ef4444;
+        padding: 1.75rem;
         border-radius: 12px;
-        margin-bottom: 1rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     
     .rec-important {
         background: linear-gradient(to right, #fffbeb 0%, white 100%);
-        border-left: 4px solid #f59e0b;
-        padding: 1.5rem;
+        border-left: 5px solid #f59e0b;
+        padding: 1.75rem;
         border-radius: 12px;
-        margin-bottom: 1rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     
     .rec-optional {
         background: linear-gradient(to right, #f0fdf4 0%, white 100%);
-        border-left: 4px solid #10b981;
-        padding: 1.5rem;
+        border-left: 5px solid #10b981;
+        padding: 1.75rem;
         border-radius: 12px;
-        margin-bottom: 1rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     
     .rec-title {
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         font-weight: 700;
         color: #1f2937;
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.85rem;
     }
     
     .rec-action {
-        font-size: 0.95rem;
+        font-size: 0.98rem;
         color: #374151;
-        margin-bottom: 0.5rem;
-        line-height: 1.5;
+        margin-bottom: 0.6rem;
+        line-height: 1.6;
     }
     
     .rec-meta {
@@ -232,7 +303,8 @@ st.markdown("""
         color: #6b7280;
         display: flex;
         gap: 1.5rem;
-        margin-top: 0.75rem;
+        margin-top: 0.85rem;
+        flex-wrap: wrap;
     }
     
     /* Insight Box */
@@ -240,7 +312,7 @@ st.markdown("""
         background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
         border-radius: 12px;
         padding: 1.25rem;
-        margin-top: 1rem;
+        margin-top: 1.25rem;
         border: 1px solid #c4b5fd;
     }
     
@@ -248,54 +320,58 @@ st.markdown("""
         font-size: 0.95rem;
         color: #5b21b6;
         font-weight: 500;
-        line-height: 1.5;
+        line-height: 1.6;
     }
     
     /* Welcome Cards */
     .welcome-card {
         background: white;
         border-radius: 16px;
-        padding: 2rem;
+        padding: 2.5rem 2rem;
         text-align: center;
         border: 1px solid #e5e7eb;
         height: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .welcome-card:hover {
+        border-color: #d1d5db;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        transform: translateY(-4px);
     }
     
     .welcome-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
+        font-size: 3.5rem;
+        margin-bottom: 1.25rem;
     }
     
     .welcome-title {
-        font-size: 1.25rem;
+        font-size: 1.3rem;
         font-weight: 700;
         color: #1f2937;
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.85rem;
     }
     
     .welcome-desc {
         font-size: 0.95rem;
         color: #6b7280;
-        line-height: 1.5;
+        line-height: 1.6;
     }
     
     /* Remove default Streamlit spacing */
     .block-container {
         padding-top: 3rem;
         padding-bottom: 3rem;
-    }
-    
-    /* Chart containers */
-    .chart-container {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        border: 1px solid #e5e7eb;
+        max-width: 1400px;
     }
     
     /* Sidebar styling */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #f9fafb 0%, white 100%);
+        background: linear-gradient(180deg, #fafafa 0%, white 100%);
+    }
+    
+    [data-testid="stSidebar"] > div:first-child {
+        padding-top: 0;
     }
     
     /* Button styling */
@@ -303,13 +379,23 @@ st.markdown("""
         border-radius: 12px;
         font-weight: 600;
         letter-spacing: 0.02em;
-        padding: 0.75rem 2rem;
+        padding: 0.85rem 2rem;
         transition: all 0.2s ease;
+        border: none;
     }
     
     .stButton > button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+    
+    /* Gauge specific styling */
+    .gauge-container {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem 1.5rem;
+        border: 1px solid #e5e7eb;
+        margin-top: 2rem;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -377,8 +463,8 @@ def get_score_context(score: float, level: str) -> Dict:
 
 
 def analyze_weakest_areas(cgpa: float, coding: int, communication: int, 
-                         projects: int, internships: int) -> str:
-    """Identify weakest areas"""
+                         projects: int, internships: int) -> Dict:
+    """Identify weakest and strongest areas"""
     scores = {
         "CGPA": (cgpa / 10) * 100,
         "Coding": (coding / 10) * 100,
@@ -394,7 +480,8 @@ def analyze_weakest_areas(cgpa: float, coding: int, communication: int,
     return {
         "weakest": [weakest[0][0], weakest[1][0]],
         "strongest": strongest[0],
-        "insight": f"Strengthening **{weakest[0][0]}** and **{weakest[1][0]}** will create the fastest improvement."
+        "insight": f"Strengthening **{weakest[0][0]}** and **{weakest[1][0]}** will create the fastest improvement.",
+        "scores": scores
     }
 
 
@@ -563,20 +650,16 @@ def load_artifacts():
 
 model, preprocessor = load_artifacts()
 
-# ============ ASPIRATIONAL HEADER ============
-st.markdown("""
-    <div style="text-align: center; margin-bottom: 4rem;">
-        <h1 class="hero-headline">Shape Your Placement Future</h1>
-        <p class="hero-subtitle">
-            We analyze your academics, technical skills, and real-world experience to create 
-            a personalized roadmap for your career readiness. Know exactly where you stand 
-            and what to do next.
-        </p>
-    </div>
-""", unsafe_allow_html=True)
-
-# ============ SIDEBAR ============
+# ============ SIDEBAR WITH BRAND HEADER ============
 with st.sidebar:
+    # BRAND HEADER - Fixed at top
+    st.markdown("""
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-name">PlacePrep Pro</div>
+            <div class="sidebar-brand-tagline">Career Readiness Intelligence</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
     st.markdown("### Your Profile")
     st.caption("Share your journey so far")
     
@@ -614,6 +697,18 @@ with st.sidebar:
         st.session_state.evaluated = True
         st.session_state.analysis_complete = False
 
+# ============ CENTERED ASPIRATIONAL HEADER ============
+st.markdown("""
+    <div class="hero-section">
+        <h1 class="hero-headline">Shape Your Placement Future</h1>
+        <p class="hero-subtitle">
+            We analyze your academics, technical skills, and real-world experience to create 
+            a personalized roadmap for your career readiness. Know exactly where you stand 
+            and what to do next.
+        </p>
+    </div>
+""", unsafe_allow_html=True)
+
 # ============ MAIN CONTENT ============
 if st.session_state.evaluated:
     
@@ -642,7 +737,7 @@ if st.session_state.evaluated:
     context = get_score_context(predicted_score, level)
     weakness_analysis = analyze_weakest_areas(cgpa, coding, communication, projects, internships)
     
-    # ========== SCORE HERO ==========
+    # ========== SCORE HERO - ALWAYS VISIBLE ==========
     st.markdown(f"""
         <div class="score-hero">
             <div class="score-number">{predicted_score:.0f}<span style="font-size: 3rem; opacity: 0.8;">/100</span></div>
@@ -657,7 +752,7 @@ if st.session_state.evaluated:
         </div>
     """, unsafe_allow_html=True)
     
-    # ========== METRICS ROW ==========
+    # ========== METRICS ROW - ALWAYS VISIBLE ==========
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -703,17 +798,17 @@ if st.session_state.evaluated:
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # ========== VISUAL STORY: SIDE-BY-SIDE CHARTS ==========
+    # ========== SECTION 1: SKILL PROFILE & CONTRIBUTION - ALWAYS VISIBLE ==========
     st.markdown('<div class="section-header">📊 Understanding Your Profile</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-subheader">How your skills shape up and what\'s driving your score</div>', unsafe_allow_html=True)
     
     chart_col1, chart_col2 = st.columns(2, gap="large")
     
-    # LEFT: Skill Profile Radar
+    # LEFT: Skill Profile Radar - ALWAYS VISIBLE
     with chart_col1:
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown("**Your Skill Shape**")
-        st.caption("Compare your profile against target benchmarks")
+        st.markdown('<div class="chart-title">Your Skill Shape</div>', unsafe_allow_html=True)
+        st.markdown('<div class="chart-caption">Compare your profile against target benchmarks</div>', unsafe_allow_html=True)
         
         radar_values = [
             cgpa,
@@ -732,7 +827,7 @@ if st.session_state.evaluated:
             name='Your Profile',
             line_color='#667eea',
             fillcolor='rgba(102, 126, 234, 0.3)',
-            line_width=2
+            line_width=3
         ))
         
         fig_radar.add_trace(go.Scatterpolar(
@@ -750,27 +845,28 @@ if st.session_state.evaluated:
             polar=dict(
                 radialaxis=dict(
                     range=[0, 10],
-                    tickfont=dict(size=10),
+                    tickfont=dict(size=11),
                     gridcolor='#e5e7eb'
                 ),
                 bgcolor='#fafafa'
             ),
-            height=400,
+            height=450,
             showlegend=True,
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
                 y=-0.15,
                 xanchor="center",
-                x=0.5
+                x=0.5,
+                font=dict(size=11)
             ),
-            margin=dict(l=40, r=40, t=20, b=60)
+            margin=dict(l=50, r=50, t=30, b=70)
         )
         
-        st.plotly_chart(fig_radar, use_container_width=True, key="radar")
+        st.plotly_chart(fig_radar, use_container_width=True, key="radar_chart")
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Insight below radar
+        # Insight below radar - ALWAYS VISIBLE
         st.markdown(f"""
             <div class="insight-box">
                 <div class="insight-text">
@@ -779,11 +875,11 @@ if st.session_state.evaluated:
             </div>
         """, unsafe_allow_html=True)
     
-    # RIGHT: Score Contribution Breakdown
+    # RIGHT: Score Contribution Breakdown - ALWAYS VISIBLE
     with chart_col2:
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown("**What's Driving Your Score**")
-        st.caption("Contribution of each component to your final score")
+        st.markdown('<div class="chart-title">What\'s Driving Your Score</div>', unsafe_allow_html=True)
+        st.markdown('<div class="chart-caption">Contribution of each component to your final score</div>', unsafe_allow_html=True)
         
         components = pd.DataFrame({
             'Component': ['CGPA', 'Coding', 'Communication', 'Projects', 'Internships'],
@@ -796,7 +892,7 @@ if st.session_state.evaluated:
             ]
         })
         
-        colors = ['#667eea' if comp in weakness_analysis['weakest'] else '#10b981' if comp == weakness_analysis['strongest'] else '#94a3b8' 
+        colors = ['#ef4444' if comp in weakness_analysis['weakest'] else '#10b981' if comp == weakness_analysis['strongest'] else '#94a3b8' 
                   for comp in components['Component']]
         
         fig_bar = go.Figure(go.Bar(
@@ -805,7 +901,7 @@ if st.session_state.evaluated:
             orientation='h',
             text=components['Contribution'].round(1),
             textposition='inside',
-            textfont=dict(color='white', size=12, weight='bold'),
+            textfont=dict(color='white', size=13, family='Inter'),
             marker=dict(
                 color=colors,
                 line=dict(width=0)
@@ -814,36 +910,135 @@ if st.session_state.evaluated:
         ))
         
         fig_bar.update_layout(
-            height=400,
+            height=450,
             xaxis=dict(
                 title="Points Contributed",
                 range=[0, 35],
-                gridcolor='#e5e7eb'
+                gridcolor='#e5e7eb',
+                showgrid=True
             ),
             yaxis=dict(
                 title="",
                 categoryorder='total ascending'
             ),
             plot_bgcolor='#fafafa',
-            margin=dict(l=20, r=20, t=20, b=40),
+            margin=dict(l=20, r=20, t=30, b=50),
             showlegend=False
         )
         
-        st.plotly_chart(fig_bar, use_container_width=True, key="contribution")
+        st.plotly_chart(fig_bar, use_container_width=True, key="contribution_bar")
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Legend for colors
+        # Legend for colors - ALWAYS VISIBLE
         st.markdown(f"""
-            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; font-size: 0.85rem;">
-                <span><span style="display: inline-block; width: 12px; height: 12px; background: #667eea; border-radius: 2px; margin-right: 4px;"></span>Needs Focus</span>
-                <span><span style="display: inline-block; width: 12px; height: 12px; background: #10b981; border-radius: 2px; margin-right: 4px;"></span>Strongest</span>
-                <span><span style="display: inline-block; width: 12px; height: 12px; background: #94a3b8; border-radius: 2px; margin-right: 4px;"></span>Balanced</span>
+            <div style="display: flex; gap: 1.25rem; justify-content: center; margin-top: 1rem; font-size: 0.85rem;">
+                <span><span style="display: inline-block; width: 14px; height: 14px; background: #ef4444; border-radius: 3px; margin-right: 6px;"></span>Needs Focus</span>
+                <span><span style="display: inline-block; width: 14px; height: 14px; background: #10b981; border-radius: 3px; margin-right: 6px;"></span>Strongest</span>
+                <span><span style="display: inline-block; width: 14px; height: 14px; background: #94a3b8; border-radius: 3px; margin-right: 6px;"></span>Balanced</span>
             </div>
         """, unsafe_allow_html=True)
     
     st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # ========== ACTION PLAN ==========
+    # ========== SECTION 2: DETAILED BREAKDOWN & GAUGE - ALWAYS VISIBLE ==========
+    st.markdown('<div class="section-header">📈 Detailed Performance Analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subheader">Component-wise scores and overall readiness gauge</div>', unsafe_allow_html=True)
+    
+    detail_col1, detail_col2 = st.columns(2, gap="large")
+    
+    # LEFT: Individual Component Scores - ALWAYS VISIBLE
+    with detail_col1:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        st.markdown('<div class="chart-title">Individual Component Scores</div>', unsafe_allow_html=True)
+        st.markdown('<div class="chart-caption">Each skill rated on a 0-100 scale</div>', unsafe_allow_html=True)
+        
+        component_scores_df = pd.DataFrame({
+            'Component': ['CGPA', 'Coding', 'Communication', 'Projects', 'Internships'],
+            'Score': [
+                (cgpa / 10) * 100,
+                (coding / 10) * 100,
+                (communication / 10) * 100,
+                (min(projects, 5) / 5) * 100,
+                (min(internships, 3) / 3) * 100
+            ]
+        })
+        
+        fig_component = go.Figure(go.Bar(
+            x=component_scores_df['Component'],
+            y=component_scores_df['Score'],
+            text=component_scores_df['Score'].round(0).astype(int),
+            textposition='outside',
+            marker=dict(
+                color=component_scores_df['Score'],
+                colorscale='RdYlGn',
+                showscale=False,
+                line=dict(width=0)
+            ),
+            hovertemplate='<b>%{x}</b><br>Score: %{y:.0f}/100<extra></extra>'
+        ))
+        
+        fig_component.update_layout(
+            height=400,
+            xaxis=dict(
+                title="",
+                tickfont=dict(size=11)
+            ),
+            yaxis=dict(
+                title="Score (0-100)",
+                range=[0, 110],
+                gridcolor='#e5e7eb'
+            ),
+            plot_bgcolor='#fafafa',
+            margin=dict(l=50, r=30, t=30, b=50)
+        )
+        
+        st.plotly_chart(fig_component, use_container_width=True, key="component_scores")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # RIGHT: Readiness Gauge - ALWAYS VISIBLE
+    with detail_col2:
+        st.markdown('<div class="gauge-container">', unsafe_allow_html=True)
+        st.markdown('<div class="chart-title">Placement Readiness Gauge</div>', unsafe_allow_html=True)
+        st.markdown('<div class="chart-caption">Your overall placement preparedness meter</div>', unsafe_allow_html=True)
+        
+        fig_gauge = go.Figure(go.Indicator(
+            mode="gauge+number+delta",
+            value=predicted_score,
+            domain={'x': [0, 1], 'y': [0, 1]},
+            title={'text': "", 'font': {'size': 20}},
+            delta={'reference': 70, 'increasing': {'color': "#10b981"}, 'decreasing': {'color': "#ef4444"}},
+            number={'font': {'size': 50, 'family': 'Inter', 'weight': 800}},
+            gauge={
+                'axis': {'range': [None, 100], 'tickwidth': 2, 'tickcolor': "#374151", 'tickfont': {'size': 12}},
+                'bar': {'color': "#667eea", 'thickness': 0.8},
+                'bgcolor': "white",
+                'borderwidth': 3,
+                'bordercolor': "#e5e7eb",
+                'steps': [
+                    {'range': [0, 60], 'color': '#fee2e2'},
+                    {'range': [60, 80], 'color': '#fef3c7'},
+                    {'range': [80, 100], 'color': '#d1fae5'}
+                ],
+                'threshold': {
+                    'line': {'color': "red", 'width': 5},
+                    'thickness': 0.85,
+                    'value': 90
+                }
+            }
+        ))
+        
+        fig_gauge.update_layout(
+            height=400,
+            margin=dict(l=30, r=30, t=30, b=30),
+            font={'family': 'Inter'}
+        )
+        
+        st.plotly_chart(fig_gauge, use_container_width=True, key="gauge_chart")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    
+    # ========== ACTION PLAN - ALWAYS VISIBLE ==========
     st.markdown('<div class="section-header">🎯 Your Personalized Action Plan</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-subheader">Prioritized steps to accelerate your placement readiness</div>', unsafe_allow_html=True)
     
@@ -856,7 +1051,7 @@ if st.session_state.evaluated:
     important_recs = [r for r in recommendations if r['priority'] == 'important']
     optional_recs = [r for r in recommendations if r['priority'] == 'optional']
     
-    # Display in columns for better breathing room
+    # Display Critical - ALWAYS VISIBLE
     if critical_recs:
         st.markdown("**🔴 Critical — Start Here**")
         for rec in critical_recs:
@@ -865,13 +1060,14 @@ if st.session_state.evaluated:
                     <div class="rec-title">{rec['icon']} {rec['title']}</div>
                     <div class="rec-action">{rec['action']}</div>
                     <div class="rec-meta">
-                        <span>⏱️ {rec['timeline']}</span>
+                        <span>⏱️ Timeline: {rec['timeline']}</span>
                         <span>📈 Impact: {rec['impact']}</span>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
     
+    # Display Important - ALWAYS VISIBLE
     if important_recs:
         st.markdown("**🟡 Important — Do Next**")
         for rec in important_recs:
@@ -880,13 +1076,14 @@ if st.session_state.evaluated:
                     <div class="rec-title">{rec['icon']} {rec['title']}</div>
                     <div class="rec-action">{rec['action']}</div>
                     <div class="rec-meta">
-                        <span>⏱️ {rec['timeline']}</span>
+                        <span>⏱️ Timeline: {rec['timeline']}</span>
                         <span>📈 Impact: {rec['impact']}</span>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
     
+    # Display Optional - ALWAYS VISIBLE
     if optional_recs:
         st.markdown("**🟢 Optional — Nice to Have**")
         for rec in optional_recs:
@@ -895,29 +1092,26 @@ if st.session_state.evaluated:
                     <div class="rec-title">{rec['icon']} {rec['title']}</div>
                     <div class="rec-action">{rec['action']}</div>
                     <div class="rec-meta">
-                        <span>⏱️ {rec['timeline']}</span>
+                        <span>⏱️ Timeline: {rec['timeline']}</span>
                         <span>📈 Impact: {rec['impact']}</span>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
     
-    # Next Steps CTA
+    # Next Steps CTA - ALWAYS VISIBLE
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("""
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center;">
-            <h3 style="margin: 0 0 1rem 0;">🚀 This Week's Focus</h3>
-            <p style="font-size: 1.1rem; margin: 0; opacity: 0.95;">
-                {}</p>
+    st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2.5rem; border-radius: 20px; text-align: center; box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);">
+            <h3 style="margin: 0 0 1.25rem 0; font-size: 1.75rem; font-weight: 700;">🚀 This Week's Priority</h3>
+            <p style="font-size: 1.15rem; margin: 0; opacity: 0.95; line-height: 1.6;">
+                {critical_recs[0]['action'] if critical_recs else important_recs[0]['action'] if important_recs else "Keep refining your skills and preparing for interviews!"}
+            </p>
         </div>
-    """.format(
-        critical_recs[0]['action'] if critical_recs else 
-        important_recs[0]['action'] if important_recs else 
-        "Keep refining your skills and preparing for interviews!"
-    ), unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
     
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # Reset button
+    # Reset button - ALWAYS VISIBLE
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         if st.button("🔄 Analyze Another Profile", use_container_width=True):
@@ -928,8 +1122,8 @@ if st.session_state.evaluated:
 else:
     # ========== WELCOME STATE ==========
     st.markdown("""
-        <div style="text-align: center; padding: 3rem 0;">
-            <p style="font-size: 1.1rem; color: #6b7280; margin-bottom: 3rem;">
+        <div style="text-align: center; padding: 3rem 0 2rem 0;">
+            <p style="font-size: 1.15rem; color: #6b7280; margin-bottom: 3rem; line-height: 1.6;">
                 👈 Complete your profile in the sidebar to receive your personalized career readiness analysis
             </p>
         </div>
@@ -952,9 +1146,9 @@ else:
         st.markdown("""
             <div class="welcome-card">
                 <div class="welcome-icon">📊</div>
-                <div class="welcome-title">Visual Understanding</div>
+                <div class="welcome-title">Complete Visual Report</div>
                 <div class="welcome-desc">
-                    Clear charts showing your strengths, weaknesses, and growth opportunities
+                    Six analytical charts showing strengths, weaknesses, and growth paths
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -963,9 +1157,9 @@ else:
         st.markdown("""
             <div class="welcome-card">
                 <div class="welcome-icon">💡</div>
-                <div class="welcome-title">Actionable Guidance</div>
+                <div class="welcome-title">Prioritized Guidance</div>
                 <div class="welcome-desc">
-                    Prioritized recommendations with timelines and expected impact
+                    Actionable recommendations with timelines and measurable impact
                 </div>
             </div>
         """, unsafe_allow_html=True)
