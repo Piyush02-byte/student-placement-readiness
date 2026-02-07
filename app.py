@@ -1,10 +1,14 @@
-import plotly.graph_objects as go
 import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import os
+import plotly.graph_objects as go
 
 from scoring import readiness_level
+from train_model import train_and_save_model
+
+# ---------------- SESSION STATE ----------------
 if "evaluated" not in st.session_state:
     st.session_state.evaluated = False
 
@@ -14,73 +18,49 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------- LOAD MODEL & PREPROCESSORS ----------------
-import os
-from train_model import train_and_save_model
-
+# ---------------- LOAD ARTIFACTS ----------------
 @st.cache_resource
 def load_artifacts():
     os.makedirs("model", exist_ok=True)
 
-    model_path = "model/readiness_model.pkl"
-    encoder_path = "model/encoder.pkl"
-    scaler_path = "model/scaler.pkl"
-
-    # If model files do not exist, train them
-    if not (os.path.exists(model_path) and 
-            os.path.exists(encoder_path) and 
-            os.path.exists(scaler_path)):
+    if not os.path.exists("model/readiness_model.pkl"):
         train_and_save_model()
 
-    model = joblib.load(model_path)
-    encoder = joblib.load(encoder_path)
-    scaler = joblib.load(scaler_path)
+    model = joblib.load("model/readiness_model.pkl")
+    encoder = joblib.load("model/encoder.pkl")
+    scaler = joblib.load("model/scaler.pkl")
 
     return model, encoder, scaler
-
-
 
 model, encoder, scaler = load_artifacts()
 
 # ---------------- HEADER ----------------
 st.title("🎓 Student Placement Readiness Dashboard")
-st.caption(
-    "Assess a student's placement readiness based on academics, skills, and experience. "
-    "Get actionable insights and improvement guidance."
-)
+st.caption("ML-powered assessment of placement readiness with visual insights")
 
 st.divider()
 
-# ============================================================
-# SIDEBAR — INPUT SECTION
-# ============================================================
+# ---------------- SIDEBAR ----------------
 st.sidebar.header("🧾 Student Profile")
 
-st.sidebar.subheader("🎓 Academic Information")
 gender = st.sidebar.selectbox("Gender", ["Male", "Female"])
 degree = st.sidebar.selectbox("Degree", ["B.Tech", "M.Tech", "B.Sc", "M.Sc"])
 branch = st.sidebar.selectbox("Branch", ["CSE", "ECE", "ME", "CE", "EE"])
 cgpa = st.sidebar.slider("CGPA", 0.0, 10.0, 7.0)
 
-st.sidebar.subheader("💻 Skills")
 coding = st.sidebar.slider("Coding Skills (1–10)", 1, 10, 6)
 communication = st.sidebar.slider("Communication Skills (1–10)", 1, 10, 6)
 
-st.sidebar.subheader("🧪 Experience")
-projects = st.sidebar.number_input("Number of Projects", 0, 10, 2)
-internships = st.sidebar.number_input("Number of Internships", 0, 5, 1)
+projects = st.sidebar.number_input("Projects", 0, 10, 2)
+internships = st.sidebar.number_input("Internships", 0, 5, 1)
 
-evaluate = st.sidebar.button("🚀 Evaluate Readiness")
-if evaluate:
+if st.sidebar.button("🚀 Evaluate Readiness"):
     st.session_state.evaluated = True
 
-
-# ============================================================
-# MAIN AREA — RESULTS & INSIGHTS
-# ============================================================
+# ---------------- MAIN OUTPUT ----------------
 if st.session_state.evaluated:
 
-    # ---------------- PREPARE INPUT ----------------
+    # ---------- INPUT ----------
     input_df = pd.DataFrame([{
         "Gender": gender,
         "Degree": degree,
@@ -95,171 +75,71 @@ if st.session_state.evaluated:
     cat_cols = ["Gender", "Degree", "Branch"]
     num_cols = ["CGPA", "Internships", "Projects", "Coding_Skills", "Communication_Skills"]
 
-    encoded_cat = encoder.transform(input_df[cat_cols])
-    scaled_num = scaler.transform(input_df[num_cols])
-    X_input = np.hstack([scaled_num, encoded_cat])
+    X_cat = encoder.transform(input_df[cat_cols])
+    X_num = scaler.transform(input_df[num_cols])
 
-    predicted_class = model.predict(X_input)[0]
+    X = np.hstack([X_num, X_cat])
 
-    score_map = {
-    0: 35,   # Low
-    1: 60,   # Medium
-    2: 85    # High
-}
-
-    predicted_score = score_map.get(predicted_class, 50)
-
-    predicted_class = int(model.predict(X_input)[0])
-
+    predicted_score = float(model.predict(X)[0])
     level = readiness_level(predicted_score)
 
-    # EVERYTHING ELSE:
-    # metrics
-    # radar chart
-    # recommendations
-    # must stay indented here
+    # ================= CONTAINER 1 =================
+    with st.container():
+        st.subheader("📊 Readiness Overview")
 
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Score", f"{predicted_score:.1f} / 100")
+        c2.metric("Level", level)
 
-
-    # ---------------- PREPARE INPUT ----------------
-    input_df = pd.DataFrame([{
-        "Gender": gender,
-        "Degree": degree,
-        "Branch": branch,
-        "CGPA": cgpa,
-        "Internships": internships,
-        "Projects": projects,
-        "Coding_Skills": coding,
-        "Communication_Skills": communication
-    }])
-
-    cat_cols = ["Gender", "Degree", "Branch"]
-    num_cols = ["CGPA", "Internships", "Projects", "Coding_Skills", "Communication_Skills"]
-
-    encoded_cat = encoder.transform(input_df[cat_cols])
-    scaled_num = scaler.transform(input_df[num_cols])
-    X_input = np.hstack([scaled_num, encoded_cat])
-
-    predicted_class = model.predict(X_input)[0]
-
-    score_map = {
-    0: 35,   # Low
-    1: 60,   # Medium
-    2: 85    # High
-}
-
-
-
-    level = readiness_level(predicted_score)
-
-    # ========================================================
-    # HERO RESULT SECTION
-    # ========================================================
-    st.subheader("📊 Readiness Overview")
-
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric(
-        label="Placement Readiness Score",
-        value=f"{predicted_score:.1f} / 100"
-    )
-
-    col2.metric(
-        label="Readiness Level",
-        value=level
-    )
-
-    if level == "Low":
-        col3.error("Needs significant improvement")
-    elif level == "Medium":
-        col3.warning("Moderately prepared")
-    else:
-        col3.success("Well prepared for placements")
+        if level == "Low":
+            c3.error("Needs Improvement")
+        elif level == "Medium":
+            c3.warning("Moderately Prepared")
+        else:
+            c3.success("Well Prepared")
 
     st.divider()
 
-    # ========================================================
-    # INSIGHT SUMMARY (TEXT)
-    # ========================================================
-    st.subheader("🧠 Summary Insight")
+    # ================= CONTAINER 2 =================
+    with st.container():
+        st.subheader("📈 Skill Radar")
 
-    if level == "Low":
-        st.write(
-            "Your current profile shows gaps in key areas required for placements. "
-            "Improving core skills and gaining experience will significantly boost readiness."
+        radar_labels = ["CGPA", "Coding", "Communication", "Projects", "Internships"]
+        radar_values = [
+            cgpa,
+            coding,
+            communication,
+            min(projects, 5) * 2,
+            min(internships, 5) * 2
+        ]
+
+        fig = go.Figure(go.Scatterpolar(
+            r=radar_values,
+            theta=radar_labels,
+            fill="toself"
+        ))
+
+        fig.update_layout(
+            polar=dict(radialaxis=dict(range=[0, 10])),
+            height=450
         )
-    elif level == "Medium":
-        st.write(
-            "You have a decent foundation, but targeted improvements in specific areas "
-            "can greatly enhance your placement chances."
-        )
-    else:
-        st.write(
-            "You demonstrate a strong and balanced profile. "
-            "Focus on interview preparation and company-specific practice."
-        )
+
+        st.plotly_chart(fig, use_container_width=True)
 
     st.divider()
 
-    # ========================================================
-    # ========================================================
-# RADAR CHART — SKILL PROFILE
-# ========================================================
-st.subheader("📈 Skill Profile Overview")
+    # ================= CONTAINER 3 =================
+    with st.container():
+        st.subheader("🧩 Recommendations")
 
-# Normalize values to 0–10 scale for visualization
-radar_labels = [
-    "CGPA",
-    "Coding Skills",
-    "Communication Skills",
-    "Projects",
-    "Internships"
-]
+        if cgpa < 7:
+            st.write("📘 Improve CGPA through consistent study.")
+        if coding < 7:
+            st.write("💻 Practice DSA and coding daily.")
+        if projects < 3:
+            st.write("🛠️ Build more real-world projects.")
+        if internships < 1:
+            st.write("🏢 Apply for internships early.")
 
-radar_values = [
-    cgpa,                       # already 0–10
-    coding,                     # 1–10
-    communication,              # 1–10
-    min(projects, 5) * 2,       # scale projects to 0–10
-    min(internships, 5) * 2     # scale internships to 0–10
-]
-
-fig = go.Figure()
-
-fig.add_trace(go.Scatterpolar(
-    r=radar_values,
-    theta=radar_labels,
-    fill='toself',
-    name='Student Profile'
-))
-
-fig.update_layout(
-    polar=dict(
-        radialaxis=dict(
-            visible=True,
-            range=[0, 10]
-        )
-    ),
-    showlegend=False,
-    height=450
-)
-
-st.plotly_chart(fig, use_container_width=True)
-
-st.subheader("📈 Visual Insights (Coming Next)")
-
-st.info(
-        "Skill profile charts, feature importance, and comparison graphs "
-        "will appear here in the next step."
-    )
-
-st.divider()
-
-    # ========================================================
-    # RECOMMENDATIONS PLACEHOLDER
-    # ========================================================
-st.subheader("🧩 Personalized Recommendations")
-
-st.info(
-        "Actionable recommendations based on your profile will be displayed here."
-    )
+else:
+    st.info("👈 Fill the form and click **Evaluate Readiness**")

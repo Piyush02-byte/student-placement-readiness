@@ -4,7 +4,7 @@ import joblib
 import os
 
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 
 
 def train_and_save_model():
@@ -14,43 +14,35 @@ def train_and_save_model():
     cat_cols = ["Gender", "Degree", "Branch"]
     num_cols = ["CGPA", "Internships", "Projects", "Coding_Skills", "Communication_Skills"]
 
-    # ---------------- CREATE TARGET (NO LEAKAGE) ----------------
-    raw_score = (
+    # ---------------- TARGET (CONTROLLED) ----------------
+    df["Readiness_Score"] = (
         df["CGPA"] * 10 +
         df["Coding_Skills"] * 6 +
         df["Communication_Skills"] * 4 +
         df["Projects"] * 5 +
         df["Internships"] * 8
-    )
+    ).clip(0, 100)
 
-    def label(score):
-        if score < 40:
-            return 0   # Low
-        elif score < 70:
-            return 1   # Medium
-        else:
-            return 2   # High
-
-    df["Readiness_Label"] = raw_score.apply(label)
-    y = df["Readiness_Label"]
+    y = df["Readiness_Score"]
 
     # ---------------- PREPROCESSING ----------------
     encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
-    X_cat_enc = encoder.fit_transform(df[cat_cols])
+    X_cat = encoder.fit_transform(df[cat_cols])
 
     scaler = StandardScaler()
-    X_num_scaled = scaler.fit_transform(df[num_cols])
+    X_num = scaler.fit_transform(df[num_cols])
 
-    X = np.hstack([X_num_scaled, X_cat_enc])
+    X = np.hstack([X_num, X_cat])
 
     # ---------------- MODEL ----------------
-    model = RandomForestClassifier(
+    model = RandomForestRegressor(
         n_estimators=200,
+        max_depth=10,
         random_state=42
     )
     model.fit(X, y)
 
-    # ---------------- SAVE ARTIFACTS ----------------
+    # ---------------- SAVE ----------------
     os.makedirs("model", exist_ok=True)
 
     joblib.dump(model, "model/readiness_model.pkl")
