@@ -79,7 +79,39 @@ if evaluate:
 # MAIN AREA — RESULTS & INSIGHTS
 # ============================================================
 if st.session_state.evaluated:
-    # charts
+
+    # ---------------- PREPARE INPUT ----------------
+    input_df = pd.DataFrame([{
+        "Gender": gender,
+        "Degree": degree,
+        "Branch": branch,
+        "CGPA": cgpa,
+        "Internships": internships,
+        "Projects": projects,
+        "Coding_Skills": coding,
+        "Communication_Skills": communication
+    }])
+
+    cat_cols = ["Gender", "Degree", "Branch"]
+    num_cols = ["CGPA", "Internships", "Projects", "Coding_Skills", "Communication_Skills"]
+
+    encoded_cat = encoder.transform(input_df[cat_cols])
+    scaled_num = scaler.transform(input_df[num_cols])
+    X_input = np.hstack([scaled_num, encoded_cat])
+
+    predicted_class = model.predict(X_input)[0]
+
+    score_map = {0: 35, 1: 60, 2: 85}
+    predicted_score = score_map[predicted_class]
+
+    level = readiness_level(predicted_score)
+
+    # EVERYTHING ELSE:
+    # metrics
+    # radar chart
+    # recommendations
+    # must stay indented here
+
 
 
     # ---------------- PREPARE INPUT ----------------
