@@ -1,6 +1,6 @@
 """
-Student Placement Readiness Dashboard - Career Coach Edition
-Addresses all UX feedback for emotional intelligence and guidance
+Student Placement Readiness - Premium Career Guidance Edition
+Focus: Aspirational presentation, visual storytelling, premium layout
 """
 
 import streamlit as st
@@ -10,7 +10,7 @@ import joblib
 import time
 from pathlib import Path
 import plotly.graph_objects as go
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from scoring import readiness_level
 from train_model import train_and_save_model
@@ -19,73 +19,297 @@ from preprocessing import StudentDataPreprocessor
 # ============ CONFIGURATION ============
 MODEL_DIR = "model"
 st.set_page_config(
-    page_title="Placement Readiness Coach",
-    page_icon="🎯",
+    page_title="Your Placement Journey",
+    page_icon="✨",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ============ CUSTOM CSS ============
+# ============ PREMIUM CSS ============
 st.markdown("""
     <style>
-    .main-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #1f77b4;
+    /* Import Premium Font */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+    
+    /* Global Styles */
+    * {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    /* Aspirational Headline */
+    .hero-headline {
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.2;
         margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
     }
-    .subtitle {
-        font-size: 1.2rem;
-        color: #666;
+    
+    /* Soft Explanatory Subtitle */
+    .hero-subtitle {
+        font-size: 1.15rem;
+        color: #6b7280;
+        font-weight: 400;
+        line-height: 1.6;
+        margin-bottom: 3rem;
+        max-width: 700px;
+    }
+    
+    /* Premium Cards */
+    .premium-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 10px 30px rgba(0,0,0,0.03);
+        border: 1px solid #f3f4f6;
         margin-bottom: 2rem;
+        transition: all 0.3s ease;
     }
-    .impact-badge {
-        display: inline-block;
-        padding: 0.2rem 0.6rem;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        margin-left: 0.5rem;
+    
+    .premium-card:hover {
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 15px 40px rgba(0,0,0,0.08);
+        transform: translateY(-2px);
     }
-    .impact-high {
-        background-color: #ff4444;
-        color: white;
-    }
-    .impact-medium {
-        background-color: #ffaa00;
-        color: white;
-    }
-    .impact-low {
-        background-color: #00cc88;
-        color: white;
-    }
-    .context-box {
+    
+    /* Score Display - Hero */
+    .score-hero {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
+        padding: 3rem 2.5rem;
+        border-radius: 20px;
+        margin-bottom: 2.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .score-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+    }
+    
+    .score-number {
+        font-size: 5rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+    
+    .score-label {
+        font-size: 1.3rem;
+        opacity: 0.95;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+    
+    .score-context {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-top: 1.5rem;
+        line-height: 1.6;
+    }
+    
+    /* Section Headers */
+    .section-header {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .section-subheader {
+        font-size: 0.95rem;
+        color: #6b7280;
+        margin-top: -1rem;
+        margin-bottom: 1.5rem;
+        font-weight: 400;
+    }
+    
+    /* Metric Cards */
+    .metric-card {
+        background: #f9fafb;
+        border-radius: 12px;
         padding: 1.5rem;
-        border-radius: 10px;
-        margin: 1rem 0;
+        text-align: center;
+        border: 1px solid #e5e7eb;
     }
-    .priority-critical {
-        border-left: 5px solid #dc3545;
-        background-color: #fff5f5;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 5px;
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
     }
-    .priority-important {
-        border-left: 5px solid #ffc107;
-        background-color: #fffef5;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 5px;
+    
+    .metric-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
-    .priority-optional {
-        border-left: 5px solid #28a745;
-        background-color: #f5fff5;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 5px;
+    
+    /* Impact Badges */
+    .impact-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+    
+    .impact-high {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+    
+    .impact-medium {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+    }
+    
+    .impact-low {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+    
+    /* Recommendation Cards */
+    .rec-critical {
+        background: linear-gradient(to right, #fef2f2 0%, white 100%);
+        border-left: 4px solid #ef4444;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+    
+    .rec-important {
+        background: linear-gradient(to right, #fffbeb 0%, white 100%);
+        border-left: 4px solid #f59e0b;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+    
+    .rec-optional {
+        background: linear-gradient(to right, #f0fdf4 0%, white 100%);
+        border-left: 4px solid #10b981;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+    
+    .rec-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.75rem;
+    }
+    
+    .rec-action {
+        font-size: 0.95rem;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        line-height: 1.5;
+    }
+    
+    .rec-meta {
+        font-size: 0.85rem;
+        color: #6b7280;
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 0.75rem;
+    }
+    
+    /* Insight Box */
+    .insight-box {
+        background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-top: 1rem;
+        border: 1px solid #c4b5fd;
+    }
+    
+    .insight-text {
+        font-size: 0.95rem;
+        color: #5b21b6;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+    
+    /* Welcome Cards */
+    .welcome-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        border: 1px solid #e5e7eb;
+        height: 100%;
+    }
+    
+    .welcome-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .welcome-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.75rem;
+    }
+    
+    .welcome-desc {
+        font-size: 0.95rem;
+        color: #6b7280;
+        line-height: 1.5;
+    }
+    
+    /* Remove default Streamlit spacing */
+    .block-container {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+    
+    /* Chart containers */
+    .chart-container {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+    }
+    
+    /* Sidebar styling */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #f9fafb 0%, white 100%);
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        border-radius: 12px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        padding: 0.75rem 2rem;
+        transition: all 0.2s ease;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -99,91 +323,65 @@ if "analysis_complete" not in st.session_state:
 # ============ HELPER FUNCTIONS ============
 
 def get_field_importance(field: str, branch: str) -> str:
-    """Determine importance of each field based on branch"""
+    """Determine importance of each field"""
     importance_map = {
-        "CSE": {
-            "CGPA": "high",
-            "Coding_Skills": "high",
-            "Communication_Skills": "medium",
-            "Projects": "high",
-            "Internships": "medium"
-        },
-        "ECE": {
-            "CGPA": "high",
-            "Coding_Skills": "medium",
-            "Communication_Skills": "medium",
-            "Projects": "medium",
-            "Internships": "high"
-        },
-        "ME": {
-            "CGPA": "high",
-            "Coding_Skills": "low",
-            "Communication_Skills": "high",
-            "Projects": "medium",
-            "Internships": "high"
-        },
-        "CE": {
-            "CGPA": "high",
-            "Coding_Skills": "low",
-            "Communication_Skills": "high",
-            "Projects": "medium",
-            "Internships": "high"
-        },
-        "EE": {
-            "CGPA": "high",
-            "Coding_Skills": "medium",
-            "Communication_Skills": "medium",
-            "Projects": "medium",
-            "Internships": "high"
-        }
+        "CSE": {"CGPA": "high", "Coding_Skills": "high", "Communication_Skills": "medium", 
+                "Projects": "high", "Internships": "medium"},
+        "ECE": {"CGPA": "high", "Coding_Skills": "medium", "Communication_Skills": "medium", 
+                "Projects": "medium", "Internships": "high"},
+        "ME": {"CGPA": "high", "Coding_Skills": "low", "Communication_Skills": "high", 
+               "Projects": "medium", "Internships": "high"},
+        "CE": {"CGPA": "high", "Coding_Skills": "low", "Communication_Skills": "high", 
+               "Projects": "medium", "Internships": "high"},
+        "EE": {"CGPA": "high", "Coding_Skills": "medium", "Communication_Skills": "medium", 
+               "Projects": "medium", "Internships": "high"}
     }
     return importance_map.get(branch, {}).get(field, "medium")
 
 
 def get_impact_badge(importance: str) -> str:
-    """Generate HTML badge for field importance"""
-    labels = {
-        "high": "High Impact",
-        "medium": "Medium Impact",
-        "low": "Low Impact"
-    }
+    """Generate HTML badge"""
+    labels = {"high": "High Impact", "medium": "Medium Impact", "low": "Low Impact"}
     return f'<span class="impact-badge impact-{importance}">{labels[importance]}</span>'
 
 
 def get_score_context(score: float, level: str) -> Dict:
-    """Provide context about the score"""
+    """Provide score context"""
     if level == "Low":
         return {
             "range": "35-59",
-            "message": "You're in the foundational stage. Many students start here!",
+            "message": "You're building your foundation. This is where growth begins.",
             "next_level": "Medium (60+)",
-            "gap": f"{60 - score:.0f} points to reach Medium level",
-            "percentile": "15-40th percentile"
+            "gap": f"{60 - score:.0f}",
+            "percentile": "15-40th",
+            "encouragement": "Many successful professionals started exactly where you are now."
         }
     elif level == "Medium":
         return {
             "range": "60-79",
-            "message": "You're progressing well! You're in the competitive range.",
+            "message": "You're in a competitive position with strong potential.",
             "next_level": "High (80+)",
-            "gap": f"{80 - score:.0f} points to reach High level",
-            "percentile": "40-75th percentile"
+            "gap": f"{80 - score:.0f}",
+            "percentile": "40-75th",
+            "encouragement": "You're ahead of many peers. Focus on key improvements to reach top tier."
         }
     else:
         return {
             "range": "80-100",
-            "message": "Excellent! You're in the top tier of placement readiness.",
-            "next_level": "You're already in the highest category!",
-            "gap": "Keep maintaining this level",
-            "percentile": "75-95th percentile"
+            "message": "You're exceptionally prepared for placement opportunities.",
+            "next_level": "Elite Status",
+            "gap": "0",
+            "percentile": "75-95th",
+            "encouragement": "Your profile stands out. Maintain this excellence through interviews."
         }
 
 
 def analyze_weakest_areas(cgpa: float, coding: int, communication: int, 
                          projects: int, internships: int) -> str:
-    """Identify weakest areas for targeted improvement"""
+    """Identify weakest areas"""
     scores = {
         "CGPA": (cgpa / 10) * 100,
-        "Coding Skills": (coding / 10) * 100,
+        "Coding": (coding / 10) * 100,
         "Communication": (communication / 10) * 100,
         "Projects": (min(projects, 5) / 5) * 100,
         "Internships": (min(internships, 3) / 3) * 100
@@ -191,149 +389,153 @@ def analyze_weakest_areas(cgpa: float, coding: int, communication: int,
     
     sorted_scores = sorted(scores.items(), key=lambda x: x[1])
     weakest = sorted_scores[:2]
+    strongest = sorted_scores[-1]
     
-    return f"Your weakest areas are **{weakest[0][0]}** and **{weakest[1][0]}** — improving these will increase your score fastest."
+    return {
+        "weakest": [weakest[0][0], weakest[1][0]],
+        "strongest": strongest[0],
+        "insight": f"Strengthening **{weakest[0][0]}** and **{weakest[1][0]}** will create the fastest improvement."
+    }
 
 
 def get_prioritized_recommendations(cgpa: float, coding: int, communication: int,
                                    projects: int, internships: int, branch: str) -> List[Dict]:
-    """Generate prioritized recommendations with impact levels"""
+    """Generate prioritized recommendations"""
     recs = []
     
-    # Critical (High Priority - Do First)
+    # Critical
     if cgpa < 6.5:
         recs.append({
             "priority": "critical",
-            "icon": "🔴",
-            "title": "CRITICAL: Academic Performance",
-            "action": f"Bring your CGPA from {cgpa:.1f} to 7.0+",
-            "why": "CGPA below 6.5 eliminates you from many company shortlists",
-            "timeline": "Next 2 semesters",
-            "impact": "High - Opens 40% more opportunities"
+            "icon": "🎯",
+            "title": "Elevate Academic Performance",
+            "action": f"Raise CGPA from {cgpa:.1f} to 7.0+ to unlock premium opportunities",
+            "why": "Opens doors to 40% more companies that have CGPA cutoffs",
+            "timeline": "2 semesters",
+            "impact": "Maximum"
         })
     
     if internships == 0:
         recs.append({
             "priority": "critical",
-            "icon": "🔴",
-            "title": "CRITICAL: Get Your First Internship",
-            "action": "Apply to 20+ companies this week. Target startups and smaller firms.",
-            "why": "0 internships is a red flag for recruiters",
-            "timeline": "Next 2-3 months",
-            "impact": "High - Essential for resume screening"
+            "icon": "💼",
+            "title": "Secure Your First Industry Experience",
+            "action": "Apply to 25+ companies this week. Target startups and product companies.",
+            "why": "Real-world experience is non-negotiable for competitive placements",
+            "timeline": "2-3 months",
+            "impact": "Critical"
         })
     
     if coding < 5 and branch == "CSE":
         recs.append({
             "priority": "critical",
-            "icon": "🔴",
-            "title": "CRITICAL: Coding Skills (CSE Branch)",
-            "action": "Solve 2 easy problems daily on LeetCode. Start with Arrays and Strings.",
-            "why": "Below 5/10 coding skills will fail technical rounds",
-            "timeline": "Next 3 months",
-            "impact": "Very High - Core requirement for CSE placements"
+            "icon": "💻",
+            "title": "Build Core Technical Strength",
+            "action": "Solve 3 problems daily on LeetCode. Master Arrays, Strings, and basic patterns.",
+            "why": "Technical interviews require minimum 6/10 coding proficiency",
+            "timeline": "3 months",
+            "impact": "Essential"
         })
     
-    # Important (Medium Priority - Do Next)
+    # Important
     if cgpa >= 6.5 and cgpa < 7.5:
         recs.append({
             "priority": "important",
-            "icon": "🟡",
-            "title": "IMPORTANT: Boost CGPA Further",
-            "action": f"Push from {cgpa:.1f} to 8.0+ for premium companies",
-            "why": "8.0+ CGPA gives access to top-tier companies",
-            "timeline": "Next 2-3 semesters",
-            "impact": "Medium - Competitive edge"
+            "icon": "📈",
+            "title": "Target Premium Company Threshold",
+            "action": f"Push from {cgpa:.1f} to 8.0+ for top-tier company eligibility",
+            "why": "Elite companies often filter at 8.0+ CGPA",
+            "timeline": "2-3 semesters",
+            "impact": "High"
         })
     
     if projects < 3:
         recs.append({
             "priority": "important",
-            "icon": "🟡",
-            "title": "IMPORTANT: Build Project Portfolio",
-            "action": f"Add {3 - projects} full-stack projects. Deploy on GitHub + live demo.",
-            "why": "Projects demonstrate practical skills beyond academics",
-            "timeline": "Next 2-4 months",
-            "impact": "High - Shows initiative and real skills"
+            "icon": "🚀",
+            "title": "Develop Project Portfolio",
+            "action": f"Create {3 - projects} production-grade projects with live deployments",
+            "why": "Projects demonstrate practical ability beyond academic theory",
+            "timeline": "3-4 months",
+            "impact": "Very High"
         })
     
     if coding >= 5 and coding < 7:
         recs.append({
             "priority": "important",
-            "icon": "🟡",
-            "title": "IMPORTANT: Advance Coding Skills",
-            "action": "Move to medium-level problems. Focus on problem-solving patterns.",
-            "why": "7+ coding skills needed to clear most company technical rounds",
-            "timeline": "Next 2 months (daily practice)",
-            "impact": "High - Interview performance"
+            "icon": "⚡",
+            "title": "Advance Problem-Solving Mastery",
+            "action": "Progress to medium-difficulty problems. Focus on patterns and optimization.",
+            "why": "Most technical rounds require 7+ proficiency to pass consistently",
+            "timeline": "2-3 months",
+            "impact": "High"
         })
     
     if communication < 7:
         recs.append({
             "priority": "important",
-            "icon": "🟡",
-            "title": "IMPORTANT: Communication Skills",
-            "action": "Practice mock interviews weekly. Join Toastmasters or debate club.",
-            "why": "Good communicators perform 2x better in HR and technical rounds",
-            "timeline": "Ongoing (3+ months)",
-            "impact": "Medium - Interview success"
+            "icon": "🗣️",
+            "title": "Strengthen Communication Impact",
+            "action": "Practice 2 mock interviews weekly. Record and review your responses.",
+            "why": "Strong communicators receive 2x more offers in final rounds",
+            "timeline": "Ongoing",
+            "impact": "Medium-High"
         })
     
-    # Optional (Low Priority - Nice to Have)
+    # Optional
     if internships == 1:
         recs.append({
             "priority": "optional",
-            "icon": "🟢",
-            "title": "OPTIONAL: Diverse Experience",
-            "action": "Consider a second internship in a different domain/role",
-            "why": "Shows versatility and broader skill set",
-            "timeline": "Next internship season",
-            "impact": "Low - Differentiator"
+            "icon": "✨",
+            "title": "Diversify Experience Profile",
+            "action": "Consider an internship in a different domain or company size",
+            "why": "Breadth of experience shows adaptability and learning agility",
+            "timeline": "Next cycle",
+            "impact": "Moderate"
         })
     
     if projects >= 3 and projects < 5:
         recs.append({
             "priority": "optional",
-            "icon": "🟢",
-            "title": "OPTIONAL: Advanced Projects",
-            "action": "Add 1-2 projects with cutting-edge tech (AI/ML, Cloud, etc.)",
-            "why": "Helps stand out in competitive shortlists",
-            "timeline": "Next 3-6 months",
-            "impact": "Low - Premium edge"
+            "icon": "🌟",
+            "title": "Build Advanced Technical Edge",
+            "action": "Add projects with emerging tech (AI/ML, Cloud Native, Web3)",
+            "why": "Differentiator in highly competitive shortlists",
+            "timeline": "4-6 months",
+            "impact": "Moderate"
         })
     
-    # Excellent case
+    # Excellence
     if not recs:
         recs.append({
             "priority": "optional",
-            "icon": "🌟",
-            "title": "EXCELLENT PROFILE",
-            "action": "Focus on interview preparation and company research",
-            "why": "Your profile is already competitive",
+            "icon": "🏆",
+            "title": "Excellence Maintained",
+            "action": "Focus on interview preparation and company-specific research",
+            "why": "Your profile is already highly competitive",
             "timeline": "Ongoing",
-            "impact": "Maintenance"
+            "impact": "Sustaining"
         })
     
     return recs
 
 
 def simulate_analysis():
-    """Simulate AI analysis with progress indicators"""
+    """Simulate thoughtful analysis"""
     progress_bar = st.progress(0)
     status_text = st.empty()
     
     steps = [
-        ("Analyzing academic performance...", 0.2),
-        ("Evaluating technical skills...", 0.4),
-        ("Assessing practical experience...", 0.6),
-        ("Comparing with peer benchmarks...", 0.8),
+        ("Analyzing your academic journey...", 0.25),
+        ("Evaluating technical capabilities...", 0.5),
+        ("Assessing practical experience...", 0.75),
         ("Generating personalized insights...", 1.0)
     ]
     
     for step, progress in steps:
-        status_text.text(step)
+        status_text.markdown(f"**{step}**")
         progress_bar.progress(progress)
-        time.sleep(0.4)  # Brief pause for each step
+        time.sleep(0.5)
     
     status_text.empty()
     progress_bar.empty()
@@ -347,96 +549,75 @@ def load_artifacts():
         model_path = Path(MODEL_DIR) / "readiness_model.pkl"
         
         if not model_path.exists():
-            st.warning("⚠️ Model not found. Training...")
+            st.warning("Setting up your career coach...")
             train_and_save_model()
         
         model = joblib.load(model_path)
         preprocessor = StudentDataPreprocessor.load(MODEL_DIR)
-        
         return model, preprocessor
     
     except Exception as e:
-        st.error(f"❌ Error: {str(e)}")
+        st.error(f"Setup error: {str(e)}")
         st.stop()
 
 
 model, preprocessor = load_artifacts()
 
-# ============ HEADER ============
-st.markdown('<h1 class="main-title">🎯 Your Placement Readiness Coach</h1>', 
-            unsafe_allow_html=True)
-st.markdown(
-    '<p class="subtitle">Get your readiness score + visual breakdown + exact improvement steps tailored for you.</p>',
-    unsafe_allow_html=True
-)
-
-st.divider()
+# ============ ASPIRATIONAL HEADER ============
+st.markdown("""
+    <div style="text-align: center; margin-bottom: 4rem;">
+        <h1 class="hero-headline">Shape Your Placement Future</h1>
+        <p class="hero-subtitle">
+            We analyze your academics, technical skills, and real-world experience to create 
+            a personalized roadmap for your career readiness. Know exactly where you stand 
+            and what to do next.
+        </p>
+    </div>
+""", unsafe_allow_html=True)
 
 # ============ SIDEBAR ============
 with st.sidebar:
-    st.header("📋 Your Profile")
-    st.caption("Fill in your details to get personalized guidance")
+    st.markdown("### Your Profile")
+    st.caption("Share your journey so far")
     
-    st.subheader("🎓 Basic Information")
+    st.markdown("#### 🎓 Academic Background")
     gender = st.selectbox("Gender", ["Male", "Female"])
     degree = st.selectbox("Degree", ["B.Tech", "M.Tech", "B.Sc", "M.Sc"])
-    branch = st.selectbox(
-        "Branch", 
-        ["CSE", "ECE", "ME", "CE", "EE"],
-        help="Your branch affects which skills matter most"
-    )
+    branch = st.selectbox("Branch", ["CSE", "ECE", "ME", "CE", "EE"])
     
-    st.subheader("📊 Academic Performance")
+    st.markdown("#### 📊 Academic Performance")
+    cgpa_imp = get_field_importance("CGPA", branch)
+    st.markdown(f"CGPA {get_impact_badge(cgpa_imp)}", unsafe_allow_html=True)
+    cgpa = st.slider("", 5.0, 10.0, 7.0, 0.1, key="cgpa", label_visibility="collapsed")
     
-    cgpa_importance = get_field_importance("CGPA", branch)
-    st.markdown(
-        f"CGPA {get_impact_badge(cgpa_importance)}", 
-        unsafe_allow_html=True
-    )
-    cgpa = st.slider("", 5.0, 10.0, 7.0, 0.1, key="cgpa_slider", label_visibility="collapsed")
+    st.markdown("#### 💡 Technical & Soft Skills")
+    coding_imp = get_field_importance("Coding_Skills", branch)
+    st.markdown(f"Coding Skills {get_impact_badge(coding_imp)}", unsafe_allow_html=True)
+    coding = st.slider("", 1, 10, 6, key="coding", label_visibility="collapsed")
     
-    st.subheader("💡 Skills Assessment")
+    comm_imp = get_field_importance("Communication_Skills", branch)
+    st.markdown(f"Communication {get_impact_badge(comm_imp)}", unsafe_allow_html=True)
+    communication = st.slider("", 1, 10, 6, key="comm", label_visibility="collapsed")
     
-    coding_importance = get_field_importance("Coding_Skills", branch)
-    st.markdown(
-        f"Coding Skills {get_impact_badge(coding_importance)}", 
-        unsafe_allow_html=True
-    )
-    coding = st.slider("", 1, 10, 6, key="coding_slider", label_visibility="collapsed")
+    st.markdown("#### 🏆 Practical Experience")
+    proj_imp = get_field_importance("Projects", branch)
+    st.markdown(f"Projects {get_impact_badge(proj_imp)}", unsafe_allow_html=True)
+    projects = st.number_input("", 0, 10, 2, key="proj", label_visibility="collapsed")
     
-    comm_importance = get_field_importance("Communication_Skills", branch)
-    st.markdown(
-        f"Communication Skills {get_impact_badge(comm_importance)}", 
-        unsafe_allow_html=True
-    )
-    communication = st.slider("", 1, 10, 6, key="comm_slider", label_visibility="collapsed")
+    intern_imp = get_field_importance("Internships", branch)
+    st.markdown(f"Internships {get_impact_badge(intern_imp)}", unsafe_allow_html=True)
+    internships = st.number_input("", 0, 5, 1, key="intern", label_visibility="collapsed")
     
-    st.subheader("🏆 Practical Experience")
+    st.markdown("---")
     
-    proj_importance = get_field_importance("Projects", branch)
-    st.markdown(
-        f"Projects {get_impact_badge(proj_importance)}", 
-        unsafe_allow_html=True
-    )
-    projects = st.number_input("", 0, 10, 2, key="proj_input", label_visibility="collapsed")
-    
-    intern_importance = get_field_importance("Internships", branch)
-    st.markdown(
-        f"Internships {get_impact_badge(intern_importance)}", 
-        unsafe_allow_html=True
-    )
-    internships = st.number_input("", 0, 5, 1, key="intern_input", label_visibility="collapsed")
-    
-    st.divider()
-    
-    if st.button("🚀 Analyze My Readiness", type="primary", use_container_width=True):
+    if st.button("✨ Discover My Readiness", type="primary", use_container_width=True):
         st.session_state.evaluated = True
         st.session_state.analysis_complete = False
 
 # ============ MAIN CONTENT ============
 if st.session_state.evaluated:
     
-    # Show analysis simulation
+    # Analysis simulation
     if not st.session_state.analysis_complete:
         simulate_analysis()
         st.session_state.analysis_complete = True
@@ -459,55 +640,80 @@ if st.session_state.evaluated:
     predicted_score = float(np.clip(model.predict(X_transformed)[0], 0, 100))
     level = readiness_level(predicted_score)
     context = get_score_context(predicted_score, level)
+    weakness_analysis = analyze_weakest_areas(cgpa, coding, communication, projects, internships)
     
-    # ========== SCORE WITH CONTEXT ==========
+    # ========== SCORE HERO ==========
     st.markdown(f"""
-        <div class="context-box">
-            <h2 style="margin: 0; font-size: 2rem;">Your Readiness Score: {predicted_score:.0f}/100</h2>
-            <p style="margin: 0.5rem 0 0 0; font-size: 1.1rem;">Level: <strong>{level}</strong></p>
-            <p style="margin: 1rem 0 0 0; font-size: 0.95rem; opacity: 0.9;">
+        <div class="score-hero">
+            <div class="score-number">{predicted_score:.0f}<span style="font-size: 3rem; opacity: 0.8;">/100</span></div>
+            <div class="score-label">{level} Readiness</div>
+            <div class="score-context">
                 {context['message']}<br>
-                You're in the <strong>{context['percentile']}</strong> among students.<br>
-                Students with similar profiles typically score between <strong>{context['range']}</strong>.
-            </p>
+                {context['encouragement']}<br><br>
+                <strong>You're in the {context['percentile']} percentile</strong> · 
+                Students like you typically score <strong>{context['range']}</strong>
+                {f" · <strong>{context['gap']} points</strong> to reach {context['next_level']}" if context['gap'] != '0' else ""}
+            </div>
         </div>
     """, unsafe_allow_html=True)
-    
-    st.divider()
     
     # ========== METRICS ROW ==========
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("Your Score", f"{predicted_score:.0f}", 
-                 help="Your placement readiness out of 100")
+        st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value">{predicted_score:.0f}</div>
+                <div class="metric-label">Your Score</div>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        st.metric("Category", level,
-                 help=f"Typical range: {context['range']}")
+        st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value">{level}</div>
+                <div class="metric-label">Category</div>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col3:
-        if level != "High":
-            st.metric("To Next Level", context['gap'],
-                     help=f"Points needed for {context['next_level']}")
-        else:
-            st.metric("Status", "Top Tier ✨",
-                     help="You're in the highest category!")
+        percentile = context['percentile'].split('-')[1].replace('th', '')
+        st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value">~{percentile}th</div>
+                <div class="metric-label">Percentile</div>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col4:
-        percentile_num = int(context['percentile'].split('-')[1].replace('th percentile', ''))
-        st.metric("Percentile", f"~{percentile_num}th",
-                 help="Approximate ranking among peers")
+        if context['gap'] != '0':
+            st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-value">{context['gap']}</div>
+                    <div class="metric-label">To Next Level</div>
+                </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-value">🏆</div>
+                    <div class="metric-label">Top Tier</div>
+                </div>
+            """, unsafe_allow_html=True)
     
-    st.divider()
+    st.markdown("<br>", unsafe_allow_html=True)
     
-    # ========== VISUALIZATIONS ==========
-    col_left, col_right = st.columns(2)
+    # ========== VISUAL STORY: SIDE-BY-SIDE CHARTS ==========
+    st.markdown('<div class="section-header">📊 Understanding Your Profile</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subheader">How your skills shape up and what\'s driving your score</div>', unsafe_allow_html=True)
     
-    with col_left:
-        st.subheader("📈 Your Skills Profile")
-        
-        fig_radar = go.Figure()
+    chart_col1, chart_col2 = st.columns(2, gap="large")
+    
+    # LEFT: Skill Profile Radar
+    with chart_col1:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        st.markdown("**Your Skill Shape**")
+        st.caption("Compare your profile against target benchmarks")
         
         radar_values = [
             cgpa,
@@ -517,44 +723,70 @@ if st.session_state.evaluated:
             min(internships, 5) * 2
         ]
         
+        fig_radar = go.Figure()
+        
         fig_radar.add_trace(go.Scatterpolar(
             r=radar_values,
             theta=["CGPA", "Coding", "Communication", "Projects", "Internships"],
             fill='toself',
             name='Your Profile',
-            line_color='#1f77b4'
+            line_color='#667eea',
+            fillcolor='rgba(102, 126, 234, 0.3)',
+            line_width=2
         ))
         
-        # Target benchmark
         fig_radar.add_trace(go.Scatterpolar(
             r=[8, 8, 7, 8, 6],
             theta=["CGPA", "Coding", "Communication", "Projects", "Internships"],
             fill='toself',
             name='Target Profile',
-            line_color='#2ca02c',
+            line_color='#10b981',
+            fillcolor='rgba(16, 185, 129, 0.1)',
             line_dash='dash',
-            opacity=0.5
+            line_width=2
         ))
         
         fig_radar.update_layout(
-            polar=dict(radialaxis=dict(range=[0, 10])),
+            polar=dict(
+                radialaxis=dict(
+                    range=[0, 10],
+                    tickfont=dict(size=10),
+                    gridcolor='#e5e7eb'
+                ),
+                bgcolor='#fafafa'
+            ),
             height=400,
-            showlegend=True
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=-0.15,
+                xanchor="center",
+                x=0.5
+            ),
+            margin=dict(l=40, r=40, t=20, b=60)
         )
         
-        st.plotly_chart(fig_radar, use_container_width=True)
+        st.plotly_chart(fig_radar, use_container_width=True, key="radar")
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        # Add insight below chart
-        weakness_insight = analyze_weakest_areas(cgpa, coding, communication, projects, internships)
-        st.info(f"💡 **Insight:** {weakness_insight}")
+        # Insight below radar
+        st.markdown(f"""
+            <div class="insight-box">
+                <div class="insight-text">
+                    💡 <strong>Key Insight:</strong> {weakness_analysis['insight']}
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
     
-    with col_right:
-        st.subheader("📊 Score Breakdown")
+    # RIGHT: Score Contribution Breakdown
+    with chart_col2:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        st.markdown("**What's Driving Your Score**")
+        st.caption("Contribution of each component to your final score")
         
-        # Calculate contributions
         components = pd.DataFrame({
             'Component': ['CGPA', 'Coding', 'Communication', 'Projects', 'Internships'],
-            'Your Value': [cgpa, coding, communication, projects, internships],
             'Contribution': [
                 ((cgpa - 5) / 5) * 30,
                 ((coding - 1) / 9) * 25,
@@ -564,32 +796,56 @@ if st.session_state.evaluated:
             ]
         })
         
+        colors = ['#667eea' if comp in weakness_analysis['weakest'] else '#10b981' if comp == weakness_analysis['strongest'] else '#94a3b8' 
+                  for comp in components['Component']]
+        
         fig_bar = go.Figure(go.Bar(
-            x=components['Contribution'],
             y=components['Component'],
+            x=components['Contribution'],
             orientation='h',
             text=components['Contribution'].round(1),
-            textposition='auto',
-            marker_color=['#ff6b6b' if x < 15 else '#4ecdc4' if x < 22 else '#95e1d3' 
-                         for x in components['Contribution']]
+            textposition='inside',
+            textfont=dict(color='white', size=12, weight='bold'),
+            marker=dict(
+                color=colors,
+                line=dict(width=0)
+            ),
+            hovertemplate='<b>%{y}</b><br>Contribution: %{x:.1f} points<extra></extra>'
         ))
         
         fig_bar.update_layout(
             height=400,
-            xaxis_title="Points Contributed",
-            yaxis_title="",
+            xaxis=dict(
+                title="Points Contributed",
+                range=[0, 35],
+                gridcolor='#e5e7eb'
+            ),
+            yaxis=dict(
+                title="",
+                categoryorder='total ascending'
+            ),
+            plot_bgcolor='#fafafa',
+            margin=dict(l=20, r=20, t=20, b=40),
             showlegend=False
         )
         
-        st.plotly_chart(fig_bar, use_container_width=True)
+        st.plotly_chart(fig_bar, use_container_width=True, key="contribution")
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        st.caption("🎯 Each component contributes differently based on importance weights")
+        # Legend for colors
+        st.markdown(f"""
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; font-size: 0.85rem;">
+                <span><span style="display: inline-block; width: 12px; height: 12px; background: #667eea; border-radius: 2px; margin-right: 4px;"></span>Needs Focus</span>
+                <span><span style="display: inline-block; width: 12px; height: 12px; background: #10b981; border-radius: 2px; margin-right: 4px;"></span>Strongest</span>
+                <span><span style="display: inline-block; width: 12px; height: 12px; background: #94a3b8; border-radius: 2px; margin-right: 4px;"></span>Balanced</span>
+            </div>
+        """, unsafe_allow_html=True)
     
-    st.divider()
+    st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # ========== PRIORITIZED RECOMMENDATIONS ==========
-    st.subheader("💡 Your Personalized Action Plan")
-    st.caption("Prioritized by impact — start from top to bottom")
+    # ========== ACTION PLAN ==========
+    st.markdown('<div class="section-header">🎯 Your Personalized Action Plan</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subheader">Prioritized steps to accelerate your placement readiness</div>', unsafe_allow_html=True)
     
     recommendations = get_prioritized_recommendations(
         cgpa, coding, communication, projects, internships, branch
@@ -600,59 +856,68 @@ if st.session_state.evaluated:
     important_recs = [r for r in recommendations if r['priority'] == 'important']
     optional_recs = [r for r in recommendations if r['priority'] == 'optional']
     
-    # Display Critical
+    # Display in columns for better breathing room
     if critical_recs:
-        st.markdown("### 🔴 CRITICAL - Do This First")
+        st.markdown("**🔴 Critical — Start Here**")
         for rec in critical_recs:
             st.markdown(f"""
-                <div class="priority-critical">
-                    <h4 style="margin: 0 0 0.5rem 0;">{rec['icon']} {rec['title']}</h4>
-                    <p style="margin: 0.5rem 0;"><strong>Action:</strong> {rec['action']}</p>
-                    <p style="margin: 0.5rem 0;"><strong>Why:</strong> {rec['why']}</p>
-                    <p style="margin: 0.5rem 0; font-size: 0.9rem;">⏱️ {rec['timeline']} | 📈 {rec['impact']}</p>
+                <div class="rec-critical">
+                    <div class="rec-title">{rec['icon']} {rec['title']}</div>
+                    <div class="rec-action">{rec['action']}</div>
+                    <div class="rec-meta">
+                        <span>⏱️ {rec['timeline']}</span>
+                        <span>📈 Impact: {rec['impact']}</span>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
     
-    # Display Important
     if important_recs:
-        st.markdown("### 🟡 IMPORTANT - Do This Next")
+        st.markdown("**🟡 Important — Do Next**")
         for rec in important_recs:
             st.markdown(f"""
-                <div class="priority-important">
-                    <h4 style="margin: 0 0 0.5rem 0;">{rec['icon']} {rec['title']}</h4>
-                    <p style="margin: 0.5rem 0;"><strong>Action:</strong> {rec['action']}</p>
-                    <p style="margin: 0.5rem 0;"><strong>Why:</strong> {rec['why']}</p>
-                    <p style="margin: 0.5rem 0; font-size: 0.9rem;">⏱️ {rec['timeline']} | 📈 {rec['impact']}</p>
+                <div class="rec-important">
+                    <div class="rec-title">{rec['icon']} {rec['title']}</div>
+                    <div class="rec-action">{rec['action']}</div>
+                    <div class="rec-meta">
+                        <span>⏱️ {rec['timeline']}</span>
+                        <span>📈 Impact: {rec['impact']}</span>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
     
-    # Display Optional
     if optional_recs:
-        st.markdown("### 🟢 OPTIONAL - Nice to Have")
+        st.markdown("**🟢 Optional — Nice to Have**")
         for rec in optional_recs:
             st.markdown(f"""
-                <div class="priority-optional">
-                    <h4 style="margin: 0 0 0.5rem 0;">{rec['icon']} {rec['title']}</h4>
-                    <p style="margin: 0.5rem 0;"><strong>Action:</strong> {rec['action']}</p>
-                    <p style="margin: 0.5rem 0;"><strong>Why:</strong> {rec['why']}</p>
-                    <p style="margin: 0.5rem 0; font-size: 0.9rem;">⏱️ {rec['timeline']} | 📈 {rec['impact']}</p>
+                <div class="rec-optional">
+                    <div class="rec-title">{rec['icon']} {rec['title']}</div>
+                    <div class="rec-action">{rec['action']}</div>
+                    <div class="rec-meta">
+                        <span>⏱️ {rec['timeline']}</span>
+                        <span>📈 Impact: {rec['impact']}</span>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
     
-    st.divider()
+    # Next Steps CTA
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("""
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center;">
+            <h3 style="margin: 0 0 1rem 0;">🚀 This Week's Focus</h3>
+            <p style="font-size: 1.1rem; margin: 0; opacity: 0.95;">
+                {}</p>
+        </div>
+    """.format(
+        critical_recs[0]['action'] if critical_recs else 
+        important_recs[0]['action'] if important_recs else 
+        "Keep refining your skills and preparing for interviews!"
+    ), unsafe_allow_html=True)
     
-    # ========== NEXT STEPS ==========
-    st.markdown("### 🎯 Your Next Week's Focus")
-    
-    if critical_recs:
-        st.success(f"**Start here:** {critical_recs[0]['action']}")
-    elif important_recs:
-        st.info(f"**Start here:** {important_recs[0]['action']}")
-    else:
-        st.success("**Keep going!** Focus on interview prep and company research.")
+    st.markdown("<br>", unsafe_allow_html=True)
     
     # Reset button
-    st.divider()
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         if st.button("🔄 Analyze Another Profile", use_container_width=True):
@@ -661,34 +926,46 @@ if st.session_state.evaluated:
             st.rerun()
 
 else:
-    # ========== WELCOME SCREEN ==========
-    st.info("👈 **Get Started:** Fill in your profile in the sidebar and click '**Analyze My Readiness**'")
-    
-    st.markdown("---")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown("### 🎯 Smart Analysis")
-        st.write("ML-powered insights based on thousands of placement outcomes")
-    
-    with col2:
-        st.markdown("### 📊 Visual Breakdown")
-        st.write("See exactly where you stand and what to improve")
-    
-    with col3:
-        st.markdown("### 💡 Actionable Steps")
-        st.write("Prioritized recommendations with timelines and impact")
-    
-    st.markdown("---")
-    
-    # Sample testimonial or stats
+    # ========== WELCOME STATE ==========
     st.markdown("""
-        <div style="background-color: #f0f2f6; padding: 2rem; border-radius: 10px; text-align: center;">
-            <h3 style="margin: 0 0 1rem 0;">What Makes This Different?</h3>
-            <p style="font-size: 1.1rem; color: #666; margin: 0;">
-                Not just a score — a complete career coach that understands your unique profile,
-                tells you exactly where you stand, and guides you step-by-step on what to do next.
+        <div style="text-align: center; padding: 3rem 0;">
+            <p style="font-size: 1.1rem; color: #6b7280; margin-bottom: 3rem;">
+                👈 Complete your profile in the sidebar to receive your personalized career readiness analysis
             </p>
         </div>
     """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3, gap="large")
+    
+    with col1:
+        st.markdown("""
+            <div class="welcome-card">
+                <div class="welcome-icon">🎯</div>
+                <div class="welcome-title">Intelligent Analysis</div>
+                <div class="welcome-desc">
+                    Machine learning insights trained on thousands of placement outcomes
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+            <div class="welcome-card">
+                <div class="welcome-icon">📊</div>
+                <div class="welcome-title">Visual Understanding</div>
+                <div class="welcome-desc">
+                    Clear charts showing your strengths, weaknesses, and growth opportunities
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+            <div class="welcome-card">
+                <div class="welcome-icon">💡</div>
+                <div class="welcome-title">Actionable Guidance</div>
+                <div class="welcome-desc">
+                    Prioritized recommendations with timelines and expected impact
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
