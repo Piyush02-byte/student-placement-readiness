@@ -4,7 +4,7 @@ import joblib
 import os
 
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier
 
 
 def train_and_save_model():
@@ -15,40 +15,50 @@ def train_and_save_model():
     num_cols = ["CGPA", "Internships", "Projects", "Coding_Skills", "Communication_Skills"]
 
     # ---------------- CREATE TARGET ----------------
-    df["Readiness_Score"] = (
-        df["CGPA"] * 10 +
-        df["Coding_Skills"] * 6 +
-        df["Communication_Skills"] * 4 +
-        df["Projects"] * 5 +
-        df["Internships"] * 8
-    ).clip(0, 100)
+    # ---------- CREATE TARGET LABEL (NO LEAKAGE) ----------
+raw_score = (
+    df["CGPA"] * 10 +
+    df["Coding_Skills"] * 6 +
+    df["Communication_Skills"] * 4 +
+    df["Projects"] * 5 +
+    df["Internships"] * 8
+)
 
-    X_cat = df[cat_cols]
-    X_num = df[num_cols]
-    y = df["Readiness_Score"]
+def label(score):
+    if score < 40:
+        return 0   # Low
+    elif score < 70:
+        return 1   # Medium
+    else:
+        return 2   # High
+
+df["Readiness_Label"] = raw_score.apply(label)
+
+y = df["Readiness_Label"]
+
 
     # ---------------- PREPROCESSING ----------------
-    encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
-    X_cat_enc = encoder.fit_transform(X_cat)
+encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+X_cat_enc = encoder.fit_transform(X_cat)
 
-    scaler = StandardScaler()
-    X_num_scaled = scaler.fit_transform(X_num)
+scaler = StandardScaler()
+X_num_scaled = scaler.fit_transform(X_num)
 
-    X = np.hstack([X_num_scaled, X_cat_enc])
+X = np.hstack([X_num_scaled, X_cat_enc])
 
     # ---------------- MODEL ----------------
-    model = RandomForestRegressor(
-        n_estimators=200,
-        random_state=42
-    )
-    model.fit(X, y)
+model = RandomForestClassifier(
+    n_estimators=200,
+    random_state=42
+)
+model.fit(X, y)
 
     # ---------------- SAVE ARTIFACTS ----------------
-    os.makedirs("model", exist_ok=True)
+os.makedirs("model", exist_ok=True)
 
-    joblib.dump(model, "model/readiness_model.pkl")
-    joblib.dump(encoder, "model/encoder.pkl")
-    joblib.dump(scaler, "model/scaler.pkl")
+joblib.dump(model, "model/readiness_model.pkl")
+joblib.dump(encoder, "model/encoder.pkl")
+joblib.dump(scaler, "model/scaler.pkl")
 
 
 if __name__ == "__main__":

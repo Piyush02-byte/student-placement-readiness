@@ -5,6 +5,8 @@ import numpy as np
 import joblib
 
 from scoring import readiness_level
+if "evaluated" not in st.session_state:
+    st.session_state.evaluated = False
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -69,11 +71,17 @@ projects = st.sidebar.number_input("Number of Projects", 0, 10, 2)
 internships = st.sidebar.number_input("Number of Internships", 0, 5, 1)
 
 evaluate = st.sidebar.button("🚀 Evaluate Readiness")
+if evaluate:
+    st.session_state.evaluated = True
+
 
 # ============================================================
 # MAIN AREA — RESULTS & INSIGHTS
 # ============================================================
-if evaluate:
+if st.session_state.evaluated:
+    # charts
+
+
     # ---------------- PREPARE INPUT ----------------
     input_df = pd.DataFrame([{
         "Gender": gender,
@@ -93,7 +101,16 @@ if evaluate:
     scaled_num = scaler.transform(input_df[num_cols])
     X_input = np.hstack([scaled_num, encoded_cat])
 
-    predicted_score = model.predict(X_input)[0]
+    predicted_class = model.predict(X_input)[0]
+
+    score_map = {
+    0: 35,   # Low
+    1: 60,   # Medium
+    2: 85    # High
+}
+
+    predicted_score = score_map[predicted_class]
+
     level = readiness_level(predicted_score)
 
     # ========================================================
