@@ -148,7 +148,7 @@ if st.session_state.evaluated:
     2: 85    # High
 }
 
-    predicted_score = score_map[predicted_class]
+
 
     level = readiness_level(predicted_score)
 
